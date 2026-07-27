@@ -57,7 +57,11 @@
                 <div class="question-text" id="question-text"></div>
                 <img class="media" id="question-image" alt="" hidden>
 
-                <div class="answer-preview admin-only" id="answer-preview" hidden>
+                <!-- Показ решает база, а не разметка: ведущему строка
+                     question_answer доступна всегда, игроку — только после
+                     «Ответ». Класса роли здесь быть не должно, иначе правило
+                     окажется записанным в двух местах и разъедется. -->
+                <div class="answer-preview" id="answer-preview" hidden>
                     <div class="answer-preview-title">Ответ</div>
                     <div class="answer-text" id="answer-text"></div>
                     <img class="media" id="answer-image" alt="" hidden>

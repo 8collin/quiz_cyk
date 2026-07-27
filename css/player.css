@@ -80,6 +80,12 @@
 }
 .role-player .media { width: 100%; max-width: 100%; border-width: 2px; margin-bottom: 10px; }
 
+/* Та же панель, что у ведущего, но его отступы съели бы весь экран. */
+.role-player .answer-preview { margin-top: 12px; padding: 14px; }
+.role-player .answer-preview-title { margin-bottom: 8px; font-size: 0.8rem; }
+.role-player .answer-text { font-size: 1.15rem; margin-bottom: 0; }
+.role-player .answer-preview .media { margin: 10px 0 0; }
+
 .role-player .player-card {
     height: 44px;
     padding: 0 16px;
