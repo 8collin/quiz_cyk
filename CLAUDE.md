@@ -167,6 +167,13 @@ describe the symptom and let the maintainer look inside.
 The session survives in `localStorage`, so this is needed once per origin —
 until someone signs out or the token expires.
 
+**The console reader prints every message twice.** One `console.log` comes
+back as two identical lines. It is the reading layer, not the page: a
+single call with a unique timestamp appears twice with the same timestamp,
+and a marker logged in one tab never shows up in another, so tabs are not
+being mixed either. Trust the content, never the count — to prove a
+handler ran exactly once, keep a counter in the page and read the variable.
+
 Two things this setup does **not** cover, and they still need a human:
 opening `index.html` from disk (the whole reason ES modules are banned),
 and the player layout on a real phone.
