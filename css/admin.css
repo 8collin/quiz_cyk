@@ -1,4 +1,4 @@
-/* Host view: desktop, sidebar plus a control bar. */
+/* Вид ведущего: десктоп, боковая панель плюс строка управления. */
 
 .role-admin .sidebar {
     width: 300px;
@@ -41,7 +41,7 @@
     cursor: pointer;
 }
 
-/* The answer panel — host only, always visible once a game is loaded. */
+/* Панель ответа — только у ведущего, видна всегда, когда игра загружена. */
 .answer-preview {
     margin-top: 20px;
     padding: 30px;

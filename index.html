@@ -71,17 +71,18 @@
     </div>
 
     <!-- ================================================================
-         Third-party libraries. Both are classic scripts exposing globals
-         (window.supabase, window.XLSX), so they work over file:// too.
+         Сторонние библиотеки. Обе — классические скрипты, выставляющие
+         глобальные объекты (window.supabase, window.XLSX), поэтому
+         работают и с file://.
          ================================================================ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- ================================================================
-         Application scripts. No ES modules here (the page must open from
-         file://), so LOAD ORDER MATTERS: foundation first, then whatever
-         builds on it, main.js last. Each file attaches its own piece to
-         the single global `Quiz` object.
+         Свои скрипты. ES-модулей здесь нет (страница должна открываться
+         с file://), поэтому ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ: сначала
+         фундамент, потом то, что на него опирается, main.js последним.
+         Каждый файл дописывает свою часть в единый глобальный объект Quiz.
          ================================================================ -->
     <script src="js/namespace.js"></script>
     <script src="js/config.js"></script>

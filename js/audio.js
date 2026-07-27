@@ -1,15 +1,15 @@
 /**
- * Sound playback and the volume slider.
+ * Воспроизведение звуков и ползунок громкости.
  *
- * Jingles are addressed by `sound_key`, not by login: renaming a player
- * must not silently break their sound, which is what happened when the
- * file name had to equal the login.
+ * Джингл адресуется по `sound_key`, а не по логину: переименование игрока
+ * не должно молча ломать ему звук, а именно это и происходило, когда имя
+ * файла обязано было совпадать с логином.
  */
 Quiz.audio = {
-    /** 0..1, mirrored in localStorage so it survives a reload. */
+    /** 0..1, дублируется в localStorage, чтобы пережить перезагрузку. */
     volume: 1,
 
-    /** Currently playing clips, kept so the slider can affect them live. */
+    /** Играющие прямо сейчас клипы — чтобы ползунок влиял на них на лету. */
     active: [],
 
     STORAGE_KEY: 'quiz_volume',
@@ -23,7 +23,7 @@ Quiz.audio = {
     setVolume: function (percent) {
         this.volume = Math.max(0, Math.min(1, Number(percent) / 100));
         localStorage.setItem(this.STORAGE_KEY, String(this.volume));
-        // Includes the intro, which may be several seconds in by now.
+        // Включая интро, которое к этому моменту может играть уже несколько секунд.
         this.active.forEach(function (clip) { clip.volume = this.volume; }, this);
     },
 
@@ -33,9 +33,9 @@ Quiz.audio = {
     },
 
     /**
-     * Plays a jingle, falling back to the default clip when the file is
-     * missing. A blocked autoplay is logged and swallowed: a silent
-     * buzzer is a nuisance, a thrown error would break the round.
+     * Играет джингл, откатываясь на файл по умолчанию, если своего нет.
+     * Заблокированный браузером автоплей логируется и проглатывается:
+     * немой буззер — неудобство, а брошенное исключение сломало бы раунд.
      */
     play: function (soundKey, allowFallback) {
         var url = this.urlFor(soundKey || Quiz.config.DEFAULT_SOUND);

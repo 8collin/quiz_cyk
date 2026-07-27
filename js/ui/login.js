@@ -1,9 +1,9 @@
 /**
- * Login screen: the form, the error line, and handing off to Quiz.auth.
+ * Экран входа: форма, строка ошибки и передача управления в Quiz.auth.
  *
- * TODO(skeleton): wire the submit handler, show a friendly message for a
- * wrong password vs. a network failure, and hide #screen-login once a
- * session exists.
+ * TODO(скелет): привязать обработчик отправки формы, по-человечески
+ * различить неверный пароль и сетевой сбой, спрятать #screen-login, как
+ * только сессия появилась.
  */
 Quiz.ui = Quiz.ui || {};
 Quiz.ui.login = {};

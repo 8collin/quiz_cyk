@@ -1,5 +1,5 @@
-/* Reset, shared layout, and the role switch.
-   Anything specific to one role belongs in admin.css / player.css. */
+/* Сброс стилей, общий каркас и переключатель ролей.
+   Всё, что относится только к одной роли, живёт в admin.css / player.css. */
 
 * {
     box-sizing: border-box;
@@ -8,8 +8,8 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Text selection is off everywhere: on a phone a long press on the buzzer
-   otherwise pops the selection menu mid-round. */
+/* Выделение текста выключено везде: иначе на телефоне долгое нажатие на
+   буззер вызывает меню выделения прямо посреди раунда. */
 body {
     user-select: none;
     -webkit-user-select: none;
@@ -22,9 +22,9 @@ body {
     overflow: hidden;
 }
 
-/* --- Role switch ---------------------------------------------------
-   One markup, two applications. Until the role is known both sets stay
-   hidden, so nothing flashes on screen before sign-in. */
+/* --- Переключатель ролей --------------------------------------------
+   Одна разметка, два приложения. Пока роль неизвестна, скрыты оба набора,
+   чтобы до входа на экране ничего не мелькнуло. */
 .role-unknown .admin-only,
 .role-unknown .player-only,
 .role-player  .admin-only,
@@ -32,7 +32,7 @@ body {
 
 [hidden] { display: none !important; }
 
-/* --- Login ---------------------------------------------------------- */
+/* --- Вход ------------------------------------------------------------ */
 #screen-login {
     position: fixed;
     inset: 0;
@@ -79,7 +79,7 @@ body {
     cursor: pointer;
 }
 
-/* --- Shared shell --------------------------------------------------- */
+/* --- Общий каркас ---------------------------------------------------- */
 #screen-game { display: flex; height: 100%; }
 
 .main-content {

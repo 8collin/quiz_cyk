@@ -1,87 +1,86 @@
-# Quiz
+# Викторина
 
-Buzzer quiz for a live audience. One page, two roles: the host drives the
-questions from a laptop, players buzz in from their phones. State is shared
-through Supabase Realtime.
+Викторина с буззером для зала. Одна страница, две роли: ведущий гоняет
+вопросы с ноутбука, игроки жмут кнопку с телефонов. Состояние
+синхронизируется через Supabase Realtime.
 
-Rewritten from scratch. The previous version lives in
-[damenweb/quiz](https://github.com/damenweb/quiz) as a single 1300-line
-`cyk.html`; it is kept only as a reference for the game mechanics.
+Переписано с нуля. Предыдущая версия лежит в
+[damenweb/quiz](https://github.com/damenweb/quiz) единым файлом `cyk.html`
+на 1300 строк; она сохраняется только как справочник по механике игры.
 
-## Constraints
+## Ограничения
 
-This project is edited on a machine with no Node.js and no toolchain, so:
+Проект дорабатывается на машине, где нет ни Node.js, ни какого-либо
+тулчейна, поэтому:
 
-- **No build step.** No TypeScript, no bundler, no npm.
-- **Classic `<script>` tags, not ES modules.** `index.html` has to open by
-  double-clicking it, and browsers block ES modules over `file://`.
-  Consequently the load order in `index.html` is significant, and files
-  communicate through the single global `Quiz` object.
-- Third-party code comes from a CDN.
+- **Никакой сборки.** Ни TypeScript, ни бандлеров, ни npm.
+- **Классические `<script>`, а не ES-модули.** `index.html` должен
+  открываться двойным кликом, а браузеры блокируют ES-модули на
+  `file://`. Из этого следует, что порядок подключения в `index.html`
+  значим, а файлы общаются через единственный глобальный объект `Quiz`.
+- Сторонние библиотеки — только с CDN.
 
-Please keep any contribution inside these limits.
+Пожалуйста, не выходите за эти рамки.
 
-## Layout
+## Структура
 
 ```
-index.html        entry point; the script order at the bottom matters
+index.html        точка входа; порядок скриптов внизу файла значим
 css/
-  tokens.css      colours, radii — nothing else hard-codes them
-  base.css        reset, shared shell, the .role-* switch
-  admin.css       host view (desktop)
-  player.css      player view (phone)
+  tokens.css      цвета, скругления — больше нигде не прописаны вручную
+  base.css        сброс, общий каркас, переключатель .role-*
+  admin.css       вид ведущего (десктоп)
+  player.css      вид игрока (телефон)
 js/
-  namespace.js    the global Quiz object
-  config.js       Supabase URL + anon key           <- fill this in
-  dom.js          small DOM helpers
-  db.js           Supabase client and every query
-  store.js        in-memory mirror of the game
-  timing.js       server clock and the T axis
-  audio.js        jingles and the volume slider
-  auth.js         sign in / sign out
-  excel.js        question import from .xlsx
-  game.js         host actions
-  buzzer.js       the player's only write
-  realtime.js     subscriptions
-  ui/             rendering, one file per region
-  main.js         startup, loaded last
+  namespace.js    глобальный объект Quiz
+  config.js       URL и anon-ключ Supabase        <- заполнить
+  dom.js          мелкие помощники для DOM
+  db.js           клиент Supabase и все запросы
+  store.js        состояние игры в памяти
+  timing.js       серверные часы и ось T
+  audio.js        джинглы и громкость
+  auth.js         вход и выход
+  excel.js        импорт вопросов из .xlsx
+  game.js         действия ведущего
+  buzzer.js       единственная запись, доступная игроку
+  realtime.js     подписки
+  ui/             отрисовка, по файлу на область экрана
+  main.js         запуск, подключается последним
 sql/
-  001_schema.sql  tables
-  002_functions.sql functions and triggers
-  003_rls.sql     row level security
-audio/            jingles, <sound_key>.mp3
+  001_schema.sql    таблицы
+  002_functions.sql функции и триггеры
+  003_rls.sql       row level security
+audio/            джинглы, <sound_key>.mp3
 ```
 
-## Setup
+## Установка
 
-1. Create a Supabase project.
-2. In **SQL Editor**, run `sql/001_schema.sql`, `sql/002_functions.sql`
-   and `sql/003_rls.sql`, in that order.
-3. Copy the project URL and the **anon** key into `js/config.js`. The anon
-   key is public by design — it ships inside the page. Access is controlled
-   by the RLS policies, not by hiding it. Never put the `service_role` key
-   in this repository.
-4. Create the host account under **Authentication → Users**, then promote it:
+1. Создать проект в Supabase.
+2. В **SQL Editor** выполнить `sql/001_schema.sql`, `sql/002_functions.sql`
+   и `sql/003_rls.sql` — именно в таком порядке.
+3. Вписать URL проекта и **anon**-ключ в `js/config.js`. Anon-ключ публичен
+   по замыслу: он лежит внутри страницы. Доступ ограничивают RLS-политики,
+   а не сокрытие ключа. Ключ `service_role` в репозиторий класть нельзя.
+4. Завести аккаунт ведущего в **Authentication → Users** и выдать ему роль:
 
    ```sql
-   update public.profile set role = 'admin' where id = '<user-uuid>';
+   update public.profile set role = 'admin' where id = '<uuid пользователя>';
    ```
 
-5. Open `index.html`.
+5. Открыть `index.html`.
 
-## Two things worth knowing before changing the rules
+## Две вещи, которые стоит знать до того, как менять правила игры
 
-**The buzzer race is decided by the database.** Every player INSERTs into
-`buzz`; the unique index `buzz_one_per_game` lets exactly one through and
-the rest get `23505`. Do not try to pick a winner on the client.
+**Гонку за буззером решает база.** Каждый игрок делает INSERT в `buzz`;
+уникальный индекс `buzz_one_per_game` пропускает ровно одного, остальные
+получают `23505`. Не пытайтесь выбрать победителя на клиенте.
 
-**Cooldowns run on the T axis, not on the clock.** T advances only while
-nobody is answering and freezes while someone holds the buzzer, so a
-penalty cannot expire during a long answer. The formula is in
-`public.think_now()` and mirrored in `js/timing.js` — change one and you
-must change the other.
+**Кулдауны идут по оси T, а не по часам.** T движется, только пока никто
+не отвечает, и замерзает, пока кто-то держит буззер, — чтобы штраф не
+истекал за время долгого ответа. Формула лежит в `public.think_now()` и
+продублирована в `js/timing.js`: меняете одну — обязаны поменять вторую.
 
-## Status
+## Состояние
 
-Skeleton. The schema, the layout and the foundation modules are in place;
-game logic is stubbed and marked with `TODO(skeleton)`.
+Скелет. Схема, вёрстка и фундаментные модули на месте; игровая логика
+заглушена и помечена `TODO(скелет)`.

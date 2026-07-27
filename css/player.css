@@ -1,7 +1,8 @@
-/* Player view: phone, single column, no sidebar chrome.
+/* Вид игрока: телефон, одна колонка, без десктопной обвязки.
 
-   Same markup as the host view, re-laid-out entirely in CSS. Note the
-   safe-area insets — without them the fixed header sits under the notch. */
+   Разметка та же, что у ведущего, вёрстка переделана целиком средствами
+   CSS. Обратите внимание на safe-area: без них фиксированная шапка
+   уезжает под чёлку. */
 
 .role-player {
     width: 100vw;
@@ -37,7 +38,8 @@
 }
 .role-player .volume-slider { width: 90px; }
 
-/* Scoreboard: fixed to the top, capped so the question always has room. */
+/* Табло: закреплено сверху, высота ограничена, чтобы вопросу всегда
+   оставалось место. */
 .role-player .sidebar {
     flex: 0 0 auto;
     width: 100%;
@@ -113,7 +115,7 @@
     padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
 }
 
-/* Colours for the four states are set by js/ui/buzzer.js. */
+/* Цвета четырёх состояний выставляет js/ui/buzzer.js. */
 .btn-buzzer {
     width: 80%;
     height: 64px;

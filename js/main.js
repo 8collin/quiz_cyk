@@ -1,16 +1,18 @@
 /**
- * Entry point. Loaded last, wires everything together and starts the app.
+ * Точка входа. Подключается последней, связывает всё вместе и запускает
+ * приложение.
  *
- * TODO(skeleton): implement
+ * TODO(скелет): реализовать
  *   1. Quiz.db.init()
- *   2. Quiz.audio.load() and bind the volume slider
- *   3. Quiz.auth.restoreSession(); no session -> show the login screen
- *   4. On sign-in: set the body role class, load the game, questions,
- *      participants, buzz and answer log, then Quiz.realtime.subscribe()
- *   5. Bind the host controls and the buzzer
+ *   2. Quiz.audio.load() и привязать ползунок громкости
+ *   3. Quiz.auth.restoreSession(); нет сессии -> показать экран входа
+ *   4. После входа: выставить класс роли на body, загрузить игру, вопросы,
+ *      участников, buzz и журнал ответов, затем Quiz.realtime.subscribe()
+ *   5. Привязать элементы управления ведущего и буззер
  *
- * Order matters at step 4: Quiz.timing.syncClock() has to run before
- * anything paints a countdown, or the first repaint uses the device clock.
+ * На четвёртом шаге важен порядок: Quiz.timing.syncClock() обязан
+ * отработать раньше, чем что-либо нарисует обратный отсчёт, иначе первая
+ * отрисовка уйдёт по часам устройства.
  */
 window.addEventListener('DOMContentLoaded', function () {
     console.log('Quiz', Quiz.VERSION, '— скелет, логика ещё не подключена');

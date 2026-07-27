@@ -1,16 +1,18 @@
 /**
- * The player list — scoreboard for players, control panel for the host.
+ * Список игроков — табло для игрока, панель управления для ведущего.
  *
- * Two things to get right:
+ * Две вещи, которые важно не испортить:
  *
- *  - Build rows with createElement/textContent, not by concatenating HTML.
- *    Player names are user input; the old version interpolated them into a
- *    template string, so a quote in a name broke the markup.
- *  - Players see the list sorted by score, the host sees it sorted by name
- *    (a list that reorders itself mid-round is unusable to score from).
+ *  - Строить строки через createElement/textContent, а не склейкой HTML.
+ *    Имена игроков — пользовательский ввод; старая версия подставляла их
+ *    в шаблонную строку, и кавычка в имени ломала разметку.
+ *  - Игрок видит список отсортированным по очкам, ведущий — по имени.
+ *    Список, который переставляется сам посреди раунда, невозможно
+ *    использовать для выставления баллов.
  *
- * TODO(skeleton): implement render(), plus the host's per-row controls
- * (−1 / 0 / +1, −⏳, remove) and the ⭐ / ⏳ badges.
+ * TODO(скелет): реализовать render(), а также элементы управления в
+ * строке у ведущего (−1 / 0 / +1, снять ожидание, удалить) и бейджи с
+ * числом ответов и остатком ожидания.
  */
 Quiz.ui = Quiz.ui || {};
 Quiz.ui.players = {};

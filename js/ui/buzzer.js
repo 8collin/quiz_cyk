@@ -1,17 +1,19 @@
 /**
- * The buzzer button: four states, one of which ticks.
+ * Кнопка буззера: четыре состояния, одно из которых тикает.
  *
- *   answering   — "ОТВЕЧАЙТЕ", green, disabled
- *   taken       — "ИДЁТ ОТВЕТ...", grey, disabled
- *   cooldown    — "ПОДОЖДИТЕ N", amber, disabled, repaints ~5x/sec
- *   ready       — "ЕСТЬ ОТВЕТ!", red, enabled
+ *   отвечаю я    — «ОТВЕЧАЙТЕ», зелёная, заблокирована
+ *   занято       — «ИДЁТ ОТВЕТ...», серая, заблокирована
+ *   кулдаун      — «ПОДОЖДИТЕ N», янтарная, заблокирована,
+ *                  перерисовывается около пяти раз в секунду
+ *   свободна     — «ЕСТЬ ОТВЕТ!», красная, доступна
  *
- * The countdown runs off Quiz.timing.remainingFor() and must not query the
- * database on a tick — one round with ten phones would be a few thousand
- * pointless requests. The cached axis is enough; realtime corrects it.
+ * Обратный отсчёт считается от Quiz.timing.remainingFor() и НЕ должен
+ * ходить в базу на каждый тик — один раунд с десятью телефонами это
+ * несколько тысяч бессмысленных запросов. Закешированной оси достаточно,
+ * realtime её поправит.
  *
- * TODO(skeleton): implement render() and the interval, and make sure the
- * interval is cleared when the cooldown ends or the player signs out.
+ * TODO(скелет): реализовать render() и интервал, и не забыть гасить
+ * интервал, когда кулдаун кончился или игрок вышел.
  */
 Quiz.ui = Quiz.ui || {};
 Quiz.ui.buzzer = {};

@@ -1,15 +1,15 @@
 /**
- * Thin DOM helpers.
+ * Тонкие помощники для работы с DOM.
  *
- * Deliberately small: this is not a framework layer, just the handful of
- * calls that would otherwise be repeated in every ui/ file.
+ * Намеренно маленькие: это не слой фреймворка, а те несколько вызовов,
+ * которые иначе повторялись бы в каждом файле ui/.
  */
 Quiz.dom = {
-    /** Element by id. Throws loudly rather than returning null. */
+    /** Элемент по id. Падает громко, а не возвращает null. */
     el: function (id) {
         var node = document.getElementById(id);
         if (!node) {
-            throw new Error('DOM element not found: #' + id);
+            throw new Error('Элемент DOM не найден: #' + id);
         }
         return node;
     },
@@ -22,7 +22,7 @@ Quiz.dom = {
         this.el(id).textContent = text == null ? '' : String(text);
     },
 
-    /** Shows the element with `src`, hides it when `src` is empty. */
+    /** Показывает элемент с `src`, прячет, когда `src` пустой. */
     setImage: function (id, src) {
         var node = this.el(id);
         if (src) {
@@ -39,8 +39,8 @@ Quiz.dom = {
     },
 
     /**
-     * Drives the `admin-only` / `player-only` CSS rules and the whole
-     * player layout, which keys off `body.role-player`.
+     * Управляет CSS-правилами `admin-only` / `player-only` и всей вёрсткой
+     * игрока, которая завязана на `body.role-player`.
      */
     setRole: function (role) {
         var body = document.body;

@@ -1,33 +1,33 @@
 /**
- * In-memory mirror of the game.
+ * Зеркало состояния игры в памяти.
  *
- * Everything the UI paints reads from here, and only realtime handlers
- * and explicit reloads write here. Keeping that one-way street is what
- * stops the "who is answering" highlight from disagreeing with the
- * buzzer state, which is the classic bug in this kind of app.
+ * Всё, что рисует интерфейс, читается отсюда, а пишут сюда только
+ * обработчики realtime и явные перезагрузки. Соблюдение этого
+ * одностороннего движения — то, что не даёт подсветке «кто отвечает»
+ * разойтись с состоянием буззера, а это классический баг таких приложений.
  *
- * Nothing in this file talks to the network.
+ * Ничто в этом файле не ходит в сеть.
  */
 Quiz.store = {
-    /** Signed-in user: { id, display_name, role }. */
+    /** Вошедший пользователь: { id, display_name, role }. */
     profile: null,
 
-    /** The game row. */
+    /** Строка game. */
     game: null,
 
-    /** Ordered question rows for the current game. */
+    /** Строки question текущей игры, по порядку. */
     questions: [],
 
-    /** Participant rows, unordered — the UI sorts its own copy. */
+    /** Строки participant без порядка — интерфейс сортирует свою копию. */
     participants: [],
 
-    /** The single active buzz row, or null when nobody is answering. */
+    /** Единственная активная строка buzz или null, когда никто не отвечает. */
     buzz: null,
 
-    /** answer_log rows for the current question, for the ⭐ badge. */
+    /** Строки answer_log по текущему вопросу, для бейджа со звёздочкой. */
     answerLog: [],
 
-    /** Revealed answer for the current question; null until the host shows it. */
+    /** Открытый ответ на текущий вопрос; null, пока ведущий его не показал. */
     revealedAnswer: null,
 
     isAdmin: function () {
@@ -40,13 +40,13 @@ Quiz.store = {
         return this.questions.find(function (q) { return q.id === id; }) || null;
     },
 
-    /** 1-based position of the current question, for "ВОПРОС 3 / 20". */
+    /** Номер текущего вопроса с единицы, для «ВОПРОС 3 / 20». */
     currentNumber: function () {
         var q = this.currentQuestion();
         return q ? q.position + 1 : 0;
     },
 
-    /** The signed-in user's participant row in this game, if any. */
+    /** Строка participant вошедшего пользователя в этой игре, если есть. */
     myParticipant: function () {
         if (!this.profile) return null;
         var myId = this.profile.id;
@@ -55,13 +55,13 @@ Quiz.store = {
         }) || null;
     },
 
-    /** True when the signed-in player is the one holding the buzzer. */
+    /** true, когда буззер держит именно вошедший игрок. */
     amIAnswering: function () {
         var mine = this.myParticipant();
         return !!this.buzz && !!mine && this.buzz.participant_id === mine.id;
     },
 
-    /** Accepted answers by this participant on the current question. */
+    /** Сколько раз участник отвечал на текущий вопрос. */
     answerCountFor: function (participantId) {
         return this.answerLog.filter(function (a) {
             return a.participant_id === participantId;

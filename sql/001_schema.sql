@@ -1,36 +1,37 @@
 -- =====================================================================
--- Quiz — schema, rewritten from scratch.
+-- Викторина — схема, написанная с нуля.
 --
--- Design notes (differences from the previous single-file version):
+-- Чем отличается от предыдущей версии (одного файла cyk.html):
 --
---   * A `game` row replaces the old single `quiz_state` row with id = 1.
---     Several games can exist; finished ones stay as history.
---   * The current question is a foreign key, not a counter smuggled
---     inside the question text as "some text|||3|20".
---   * `game` no longer duplicates the question text / image. Clients
---     read the `question` row by id, so there is exactly one copy.
---   * A participant's jingle is `sound_key`, decoupled from the login.
---     Previously the file name had to equal the login, which meant
---     renaming a player silently broke their sound.
---   * Identity comes from Supabase Auth (`auth.users`), so passwords
---     are never stored or compared by us. See 002_rls.sql.
+--   * Строка `game` вместо единственной строки quiz_state с id = 1.
+--     Игр может быть несколько, доигранные остаются как история.
+--   * Текущий вопрос — внешний ключ, а не счётчик, спрятанный внутрь
+--     текста вопроса в виде "какой-то текст|||3|20".
+--   * `game` больше не дублирует текст и картинку вопроса. Клиент
+--     читает строку `question` по id, то есть копия ровно одна.
+--   * Джингл участника — это `sound_key`, отвязанный от логина. Раньше
+--     имя файла обязано было совпадать с логином, поэтому
+--     переименование игрока молча ломало ему звук.
+--   * Личность берётся из Supabase Auth (`auth.users`), так что пароли
+--     мы не храним и не сравниваем. См. 003_rls.sql.
 --
--- "Thinking time" axis T
--- ----------------------
--- Answer cooldowns are NOT measured in wall-clock time. They advance
--- along an axis T that only moves while nobody is answering, and
--- freezes while someone holds the buzzer -- so a player's penalty does
--- not burn away during a long answer.
+-- Ось «времени размышления» T
+-- ---------------------------
+-- Кулдауны считаются НЕ по настенным часам, а по оси T, которая идёт
+-- только пока никто не отвечает, и замерзает, пока кто-то держит
+-- буззер, — чтобы штраф игрока не сгорал впустую за время чужого
+-- двухминутного ответа.
 --
---   T = think_base_ms + (think_since is null ? 0 : now() - think_since)
+--   T = think_base_ms + (заморожено ? 0 : now() - think_since)
 --
--- `think_since = null` means frozen. Both columns live on `game`.
+-- `think_since = null` означает «заморожено». Обе колонки лежат в `game`.
 -- =====================================================================
 
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------
--- profile: one row per authenticated user, mirrors auth.users
+-- profile: по строке на каждого аутентифицированного пользователя,
+-- зеркалит auth.users
 -- ---------------------------------------------------------------------
 create table public.profile (
     id           uuid primary key references auth.users (id) on delete cascade,
@@ -41,10 +42,10 @@ create table public.profile (
 );
 
 comment on table public.profile is
-    'Application-level data for an authenticated user. Passwords live in auth.users, never here.';
+    'Прикладные данные пользователя. Пароли живут в auth.users и здесь не появляются никогда.';
 
 -- ---------------------------------------------------------------------
--- game: one running quiz
+-- game: одна идущая викторина
 -- ---------------------------------------------------------------------
 create table public.game (
     id                  uuid primary key default gen_random_uuid(),
@@ -53,22 +54,23 @@ create table public.game (
                                     check (status in ('lobby', 'running', 'finished')),
     host_id             uuid        not null references public.profile (id),
 
-    current_question_id uuid,       -- FK added after `question` exists
+    current_question_id uuid,       -- внешний ключ добавляется ниже, после `question`
     show_answer         boolean     not null default false,
 
-    -- Thinking-time axis (see header).
+    -- Ось времени размышления (см. шапку файла).
     think_base_ms       integer     not null default 0 check (think_base_ms >= 0),
     think_since         timestamptz,
 
-    -- How much waiting one accepted answer adds, in ms. Per game, so a
-    -- host can run a faster or slower round without touching code.
+    -- Сколько ожидания добавляет один принятый ответ, мс. Настройка на
+    -- уровне игры, чтобы ведущий мог провести раунд быстрее или медленнее,
+    -- не трогая код.
     penalty_step_ms     integer     not null default 5000 check (penalty_step_ms >= 0),
 
     created_at          timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------
--- question: ordered list belonging to a game
+-- question: упорядоченный список, принадлежащий игре
 -- ---------------------------------------------------------------------
 create table public.question (
     id        uuid    primary key default gen_random_uuid(),
@@ -83,15 +85,15 @@ create table public.question (
 create index question_game_position_idx on public.question (game_id, position);
 
 -- ---------------------------------------------------------------------
--- question_answer: the answer, deliberately kept out of `question`
+-- question_answer: ответ, намеренно вынесенный из `question`
 --
--- RLS is row-level, not column-level: anything a player may SELECT,
--- they may SELECT entirely. Keeping the answer in the same row as the
--- question would therefore hand it to every player through devtools
--- before the host reveals it -- which is exactly what the previous
--- version did by broadcasting a_text to everyone at all times.
+-- RLS работает построчно, а не поколоночно: всё, что игроку разрешено
+-- прочитать, он читает целиком. Поэтому ответ, лежащий в одной строке с
+-- вопросом, был бы виден каждому игроку через devtools ещё до того, как
+-- ведущий его откроет, — ровно это и делала предыдущая версия, рассылая
+-- a_text всем и всегда.
 --
--- Split out, the reveal becomes a policy: see 003_rls.sql.
+-- Вынесенный отдельно, ответ открывается политикой: см. 003_rls.sql.
 -- ---------------------------------------------------------------------
 create table public.question_answer (
     question_id uuid primary key references public.question (id) on delete cascade,
@@ -104,11 +106,11 @@ alter table public.game
     foreign key (current_question_id) references public.question (id) on delete set null;
 
 -- ---------------------------------------------------------------------
--- participant: someone playing a specific game
+-- participant: тот, кто играет в конкретной игре
 --
--- profile_id is nullable on purpose: the host can add an offline player
--- ("manual" in the old version) who has no account and is scored from
--- the host's screen.
+-- profile_id обнуляемый намеренно: ведущий может добавить игрока без
+-- аккаунта («ручного», как в старой версии) и вести ему счёт со своего
+-- экрана.
 -- ---------------------------------------------------------------------
 create table public.participant (
     id               uuid    primary key default gen_random_uuid(),
@@ -117,11 +119,11 @@ create table public.participant (
     display_name     text    not null,
     score            integer not null default 0,
 
-    -- Deadline on the T axis (ms). The player may buzz once T passes it.
+    -- Личный дедлайн на оси T (мс). Игрок может жать буззер, когда T его прошло.
     penalty_until_ms integer not null default 0 check (penalty_until_ms >= 0),
 
-    -- Jingle file name without extension, resolved to audio/<sound_key>.mp3.
-    -- Null falls back to audio/default.mp3.
+    -- Имя файла джингла без расширения, разворачивается в audio/<sound_key>.mp3.
+    -- null означает audio/default.mp3.
     sound_key        text,
 
     created_at       timestamptz not null default now(),
@@ -132,11 +134,11 @@ create table public.participant (
 create index participant_game_idx on public.participant (game_id);
 
 -- ---------------------------------------------------------------------
--- buzz: who is answering right now
+-- buzz: кто отвечает прямо сейчас
 --
--- At most one row per game. The unique index is the whole concurrency
--- story: every player INSERTs, exactly one wins, the losers get 23505.
--- Never resolve this race on the client.
+-- Не более одной строки на игру. Уникальный индекс — это и есть вся
+-- история про гонку: все игроки делают INSERT, проходит ровно один,
+-- проигравшие получают 23505. Никогда не решайте эту гонку на клиенте.
 -- ---------------------------------------------------------------------
 create table public.buzz (
     id             uuid        primary key default gen_random_uuid(),
@@ -148,10 +150,11 @@ create table public.buzz (
 create unique index buzz_one_per_game on public.buzz (game_id);
 
 -- ---------------------------------------------------------------------
--- answer_log: accepted answers, the audit trail
+-- answer_log: принятые ответы, журнал
 --
--- Written when the host scores someone. `delta` records what the host
--- awarded (-1 / 0 / +1), so "answered but got nothing" stays visible.
+-- Пишется, когда ведущий оценивает игрока. `delta` хранит то, что ведущий
+-- поставил (-1 / 0 / +1), чтобы «отвечал, но не получил ничего» осталось
+-- видно.
 -- ---------------------------------------------------------------------
 create table public.answer_log (
     id             uuid        primary key default gen_random_uuid(),

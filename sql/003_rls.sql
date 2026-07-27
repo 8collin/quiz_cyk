@@ -1,13 +1,13 @@
 -- =====================================================================
--- Quiz — row level security.
+-- Викторина — row level security.
 --
--- The anon key is public: it ships inside the page and anyone can read
--- it. So every rule that matters has to hold here, in the database.
--- The previous version had none of this -- any player could have set
--- their own score with two lines in the console.
+-- Anon-ключ публичный: он лежит внутри страницы, и прочитать его может
+-- кто угодно. Значит, всё, что действительно важно, должно держаться
+-- здесь, в базе. В предыдущей версии этого не было вовсе — любой игрок
+-- мог поставить себе счёт двумя строчками в консоли.
 --
--- Baseline: players read, the host writes. The only thing a player may
--- write is a buzz row for themselves.
+-- Базовое правило: игроки читают, ведущий пишет. Единственное, что
+-- игроку разрешено записать, — строка buzz от своего имени.
 -- =====================================================================
 
 alter table public.profile         enable row level security;
@@ -18,16 +18,15 @@ alter table public.participant     enable row level security;
 alter table public.buzz            enable row level security;
 alter table public.answer_log      enable row level security;
 
--- Helpers is_admin() / my_participant_id() are defined in 002_functions.sql,
--- because the functions there guard themselves with is_admin() too.
+-- Хелперы is_admin() / my_participant_id() определены в 002_functions.sql,
+-- потому что тамошние функции тоже защищают себя через is_admin().
 
 -- ---------------------------------------------------------------------
 -- profile
 --
--- Everyone signed in can see everyone's name (the scoreboard needs it).
--- You may rename yourself but not promote yourself: `role` is guarded
--- by the trigger below, because a WITH CHECK clause cannot compare
--- against the row's previous value.
+-- Любой вошедший видит имена всех — это нужно табло. Переименовать себя
+-- можно, повысить себя нельзя: `role` стережёт триггер ниже, потому что
+-- в WITH CHECK нельзя сравнить со старым значением строки.
 -- ---------------------------------------------------------------------
 create policy profile_select_authenticated on public.profile
     for select to authenticated
@@ -51,7 +50,7 @@ set search_path = public
 as $$
 begin
     if new.role is distinct from old.role and not public.is_admin() then
-        raise exception 'role change not allowed' using errcode = 'P0001';
+        raise exception 'менять роль запрещено' using errcode = 'P0001';
     end if;
     return new;
 end;
@@ -63,7 +62,7 @@ create trigger guard_profile_role_before_update
     execute function public.guard_profile_role();
 
 -- ---------------------------------------------------------------------
--- game / question: readable by all players, writable by the host only
+-- game / question: читают все игроки, пишет только ведущий
 -- ---------------------------------------------------------------------
 create policy game_select_authenticated on public.game
     for select to authenticated
@@ -84,12 +83,11 @@ create policy question_admin_all on public.question
     with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- question_answer: the reveal, enforced in the database
+-- question_answer: показ ответа, обеспеченный базой
 --
--- A player may read an answer only while it is the current question AND
--- the host has flipped show_answer. Before that the row simply does not
--- exist as far as the player's session is concerned -- no amount of
--- poking at the console brings it back.
+-- Игрок может прочитать ответ, только пока это текущий вопрос И ведущий
+-- нажал «Ответ». До этого момента строки для его сессии просто не
+-- существует — никакое ковыряние в консоли её не достанет.
 -- ---------------------------------------------------------------------
 create policy question_answer_select_when_revealed on public.question_answer
     for select to authenticated
@@ -108,7 +106,7 @@ create policy question_answer_admin_all on public.question_answer
     with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- participant: scores are read by everyone, changed only by the host
+-- participant: счёт читают все, меняет только ведущий
 -- ---------------------------------------------------------------------
 create policy participant_select_authenticated on public.participant
     for select to authenticated
@@ -120,11 +118,11 @@ create policy participant_admin_all on public.participant
     with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- buzz: the one thing a player writes
+-- buzz: единственное, что пишет игрок
 --
--- INSERT is allowed only for the player's own participant row. Deleting
--- is the host's call -- a player must not be able to free the slot for
--- someone else, or clear their own buzz to dodge the penalty.
+-- INSERT разрешён только от имени своей же строки participant. Удаление —
+-- дело ведущего: игрок не должен уметь освободить слот за другого или
+-- стереть собственное нажатие, чтобы увернуться от штрафа.
 -- ---------------------------------------------------------------------
 create policy buzz_select_authenticated on public.buzz
     for select to authenticated
@@ -140,7 +138,7 @@ create policy buzz_admin_all on public.buzz
     with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- answer_log: written by the host when scoring, read by everyone
+-- answer_log: пишет ведущий при оценке, читают все
 -- ---------------------------------------------------------------------
 create policy answer_log_select_authenticated on public.answer_log
     for select to authenticated
@@ -152,12 +150,15 @@ create policy answer_log_admin_all on public.answer_log
     with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- Function execution
+-- Права на выполнение функций
+--
+-- freeze/resume отзываем у всех: их дело — вызываться из триггеров, а не
+-- руками из клиента. Остальные проверяют роль внутри себя.
 -- ---------------------------------------------------------------------
 revoke execute on function public.freeze_thinking(uuid) from public, anon, authenticated;
 revoke execute on function public.resume_thinking(uuid) from public, anon, authenticated;
 
-grant execute on function public.server_now()           to authenticated;
-grant execute on function public.think_now(uuid)        to authenticated;
-grant execute on function public.reset_thinking(uuid)   to authenticated;
-grant execute on function public.reduce_penalty(uuid)   to authenticated;
+grant execute on function public.server_now()         to authenticated;
+grant execute on function public.think_now(uuid)      to authenticated;
+grant execute on function public.reset_thinking(uuid) to authenticated;
+grant execute on function public.reduce_penalty(uuid) to authenticated;

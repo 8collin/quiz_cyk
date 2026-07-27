@@ -1,19 +1,21 @@
 /**
- * The player's single write path.
+ * Единственный путь записи, доступный игроку.
  *
- * The race between players is settled by the unique index
- * `buzz_one_per_game`: everyone INSERTs, exactly one row survives, the
- * losers come back with 23505. Never try to decide the winner on the
- * client — clocks and latency make that unwinnable.
+ * Гонку между игроками решает уникальный индекс `buzz_one_per_game`: все
+ * делают INSERT, выживает ровно одна строка, остальные получают 23505.
+ * Не пытайтесь выбрать победителя на клиенте — с разбросом часов и
+ * задержек эту игру не выиграть.
  *
- * Error codes worth handling by name:
- *   23505 — someone was faster; stay disabled, realtime will show who
- *   P0001 — the trigger refused: still on cooldown. Means our clock or
- *           cached axis drifted, so resync rather than retry.
+ * Коды ошибок, которые надо разбирать по имени:
+ *   23505 — кто-то оказался быстрее; остаёмся заблокированными, realtime
+ *           вот-вот покажет, кто именно
+ *   P0001 — триггер отказал: кулдаун ещё идёт. Значит, наши часы или
+ *           закешированная ось разъехались — синхронизироваться, а не
+ *           повторять запрос
  *
- * TODO(skeleton): implement
- *   hit()  — local guards (nobody answering, no cooldown), disable the
- *            button immediately against a double tap, insert, classify
- *            the error
+ * TODO(скелет): реализовать
+ *   hit()  — локальные предохранители (никто не отвечает, кулдауна нет),
+ *            мгновенно погасить кнопку против двойного тапа, вставить
+ *            строку, разобрать ошибку по коду
  */
 Quiz.buzzer = {};

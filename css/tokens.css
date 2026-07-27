@@ -1,6 +1,6 @@
-/* Design tokens. The palette carried over from the previous version —
-   slate background, one accent per meaning. Nothing else should hard-code
-   a colour. */
+/* Токены оформления. Палитра перенесена из предыдущей версии:
+   сланцевый фон, по одному акцентному цвету на смысл. Больше нигде цвет
+   не должен быть прописан вручную. */
 :root {
     --bg-base:   #0f172a;
     --bg-panel:  #1e293b;

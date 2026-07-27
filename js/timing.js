@@ -1,40 +1,40 @@
 /**
- * Server clock and the "thinking time" axis T.
+ * Серверные часы и ось «времени размышления» T.
  *
- * Two rules this file exists to enforce:
+ * Два правила, ради которых этот файл существует:
  *
- *  1. Never trust the device clock. Phones drift by minutes, and every
- *     cooldown is a comparison against a timestamp Postgres wrote. We
- *     measure the offset once and correct for it.
+ *  1. Не верить часам устройства. Телефоны врут на минуты, а каждый
+ *     кулдаун — это сравнение с меткой времени, которую поставил Postgres.
+ *     Смещение измеряется один раз, дальше поправка учитывается везде.
  *
- *  2. Cooldowns advance along T, not along wall-clock time. T moves only
- *     while nobody holds the buzzer and freezes while someone answers, so
- *     a penalty cannot quietly expire during a two-minute answer.
+ *  2. Кулдауны идут по оси T, а не по настенным часам. T движется, только
+ *     пока никто не держит буззер, и замерзает, пока кто-то отвечает, —
+ *     чтобы штраф не истёк тихо за время двухминутного ответа.
  *
- *         T = thinkBaseMs + (frozen ? 0 : serverNow() - thinkSince)
+ *         T = thinkBaseMs + (заморожено ? 0 : serverNow() - thinkSince)
  *
- *     The same formula lives in SQL as think_now(); the two must agree.
- *     This copy exists so the countdown can repaint 5x a second without
- *     touching the network.
+ *     Та же формула живёт в SQL как think_now(); они обязаны совпадать.
+ *     Эта копия нужна, чтобы обратный отсчёт перерисовывался пять раз в
+ *     секунду, не трогая сеть.
  */
 Quiz.timing = {
-    /** serverTime - localTime, in ms. */
+    /** serverTime - localTime, мс. */
     offsetMs: 0,
 
-    /** Accumulated T at the moment of the last freeze. */
+    /** Накопленное T на момент последней заморозки. */
     thinkBaseMs: 0,
 
-    /** Server ms when T resumed, or null while frozen. */
+    /** Серверные мс, когда T возобновилось, или null, пока заморожено. */
     thinkSince: null,
 
-    /** Cost of one accepted answer, ms. Read from the game row. */
+    /** Цена одного принятого ответа, мс. Читается из строки game. */
     penaltyStepMs: 5000,
 
     /**
-     * Measures the clock offset against the database.
+     * Измеряет смещение часов относительно базы.
      *
-     * The round trip is symmetric enough that its midpoint is the best
-     * cheap estimate of when the server actually answered.
+     * Круговая задержка достаточно симметрична, чтобы её середина была
+     * лучшей дешёвой оценкой момента, когда сервер реально ответил.
      */
     syncClock: async function () {
         var t0 = Date.now();
@@ -52,12 +52,12 @@ Quiz.timing = {
         }
     },
 
-    /** Best estimate of the current server time, ms. */
+    /** Лучшая оценка текущего серверного времени, мс. */
     serverNow: function () {
         return Date.now() + this.offsetMs;
     },
 
-    /** Caches the axis fields off a game row (initial load or realtime). */
+    /** Кеширует поля оси из строки game (первая загрузка или realtime). */
     applyGameRow: function (game) {
         if (!game) return;
         if ('think_base_ms' in game) {
@@ -71,7 +71,7 @@ Quiz.timing = {
         }
     },
 
-    /** Current position on the T axis, ms. Frozen when thinkSince is null. */
+    /** Текущее положение на оси T, мс. Стоит на месте, пока thinkSince = null. */
     thinkNow: function () {
         if (this.thinkSince == null) {
             return this.thinkBaseMs;
@@ -79,7 +79,7 @@ Quiz.timing = {
         return this.thinkBaseMs + (this.serverNow() - this.thinkSince);
     },
 
-    /** How much longer a participant must wait, ms. Never negative. */
+    /** Сколько участнику ещё ждать, мс. Никогда не отрицательное. */
     remainingFor: function (participant) {
         if (!participant) return 0;
         return Math.max(0, (participant.penalty_until_ms || 0) - this.thinkNow());

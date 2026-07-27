@@ -1,19 +1,18 @@
 /**
- * Realtime subscriptions: the only thing that writes to Quiz.store during
- * a round.
+ * Подписки realtime — единственное, что пишет в Quiz.store по ходу раунда.
  *
- * Hard-won lesson from the old version: after the host changes a question,
- * do not assume the buzz and participant channels will catch up on their
- * own. They are separate subscriptions and can lag behind the game row,
- * which left the "answering" highlight and the ⏳ badges stuck. Re-read
- * the affected tables explicitly after a question change.
+ * Урок, оплаченный старой версией: после того как ведущий сменил вопрос,
+ * НЕ рассчитывайте, что каналы buzz и participant догонят сами. Это
+ * отдельные подписки, они могут отстать от строки game, и тогда подсветка
+ * «отвечает» и бейджи с песочными часами залипают. Перечитывайте
+ * затронутые таблицы явно.
  *
- * TODO(skeleton): implement
- *   subscribe(gameId) — postgres_changes on game / participant / buzz /
- *                       answer_log, plus a broadcast channel for the intro
+ * TODO(скелет): реализовать
+ *   subscribe(gameId) — postgres_changes на game / participant / buzz /
+ *                       answer_log плюс канал broadcast для интро
  *   unsubscribe()
  *
- * On a buzz INSERT: play that participant's jingle. On any game UPDATE:
- * repaint the question and re-read the revealed answer.
+ * На INSERT в buzz — проиграть джингл этого участника. На любой UPDATE
+ * game — перерисовать вопрос и перечитать открытый ответ.
  */
 Quiz.realtime = {};

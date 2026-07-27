@@ -1,21 +1,21 @@
 /**
- * Host actions. Nothing here is reachable for a player: the UI hides the
- * controls and the RLS policies reject the writes anyway.
+ * Действия ведущего. Игроку отсюда недоступно ничего: интерфейс прячет
+ * элементы управления, а RLS-политики всё равно отвергнут запись.
  *
- * TODO(skeleton): implement
- *   goToQuestion(position)   — move the pointer, then reset_thinking()
+ * TODO(скелет): реализовать
+ *   goToQuestion(position)   — сдвинуть указатель, затем reset_thinking()
  *   next() / prev()
- *   toggleAnswer()           — flip game.show_answer; this is what makes
- *                              question_answer readable to players
- *   score(participantId, d)  — write answer_log (the trigger applies the
- *                              penalty) and release the buzz slot
- *   releaseBuzz()            — drop the answering player without scoring;
- *                              deliberately does NOT count as an attempt
- *   reducePenalty(id)        — rpc, undoes one accidental buzz
+ *   toggleAnswer()           — переключить game.show_answer; именно это
+ *                              открывает игрокам чтение question_answer
+ *   score(participantId, d)  — записать answer_log (штраф наложит триггер)
+ *                              и освободить слот буззера
+ *   releaseBuzz()            — снять отвечающего без оценки; намеренно НЕ
+ *                              считается попыткой и не двигает кулдауны
+ *   reducePenalty(id)        — rpc, отмена одного случайного нажатия
  *   clearPenalties()         — rpc reset_thinking
- *   addOfflinePlayer(name)   — participant row with profile_id = null
+ *   addOfflinePlayer(name)   — строка participant с profile_id = null
  *   removeParticipant(id)
- *   restart()                — scores to 0, questions dropped, axis reset
- *   playIntro()              — local + broadcast on the game channel
+ *   restart()                — счёт в ноль, вопросы стереть, ось сбросить
+ *   playIntro()              — локально + broadcast в канал игры
  */
 Quiz.game = {};

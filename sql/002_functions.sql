@@ -1,17 +1,16 @@
 -- =====================================================================
--- Quiz — server-side functions and triggers.
+-- Викторина — серверные функции и триггеры.
 --
--- Everything that must not be decided by the client lives here:
--- the authoritative clock, the thinking-time axis, and the check that
--- a player is actually allowed to buzz.
+-- Здесь живёт всё, что нельзя доверять клиенту: авторитетные часы, ось
+-- времени размышления и проверка того, что игроку вообще можно жать.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- Identity helpers.
+-- Хелперы про личность пользователя.
 --
--- security definer so they can read `profile` / `participant` without
--- re-entering those tables' own RLS policies, which would recurse.
--- Used both by the policies in 003_rls.sql and by the guards below.
+-- security definer, чтобы читать `profile` / `participant` в обход их
+-- собственных RLS-политик, — иначе получилась бы рекурсия. Используются
+-- и политиками из 003_rls.sql, и защитами в этом файле.
 -- ---------------------------------------------------------------------
 create or replace function public.is_admin()
 returns boolean
@@ -38,10 +37,11 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------
--- Authoritative clock.
+-- Авторитетные часы.
 --
--- Clients call this once at startup and keep the offset. Phone clocks
--- drift by minutes; every cooldown is compared against server time.
+-- Клиент вызывает это один раз при старте и запоминает смещение. Часы
+-- телефона врут на минуты, а каждый кулдаун сравнивается с серверным
+-- временем.
 -- ---------------------------------------------------------------------
 create or replace function public.server_now()
 returns timestamptz
@@ -52,8 +52,8 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------
--- Current value of the thinking-time axis T for a game, in ms.
--- Mirrors the client-side formula in js/timing.js -- keep both in sync.
+-- Текущее значение оси T для игры, в мс.
+-- Повторяет клиентскую формулу из js/timing.js — держите их согласованными.
 -- ---------------------------------------------------------------------
 create or replace function public.think_now(p_game_id uuid)
 returns bigint
@@ -70,11 +70,11 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------
--- Freeze / resume the axis.
+-- Заморозка / возобновление оси.
 --
--- Freezing folds elapsed time into think_base_ms and clears think_since.
--- Resuming stamps think_since with now(). Both are idempotent, so the
--- triggers below can call them without checking the current state.
+-- Заморозка сворачивает прошедшее время в think_base_ms и обнуляет
+-- think_since. Возобновление ставит think_since = now(). Обе идемпотентны,
+-- поэтому триггеры ниже вызывают их, не проверяя текущее состояние.
 -- ---------------------------------------------------------------------
 create or replace function public.freeze_thinking(p_game_id uuid)
 returns void
@@ -106,12 +106,12 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
--- Reset the axis and every personal cooldown. Called when the host
--- moves to another question or restarts the game.
+-- Сброс оси и всех личных кулдаунов. Вызывается, когда ведущий переходит
+-- к другому вопросу или перезапускает игру.
 --
--- Note the WHERE clauses: Supabase runs with pg_safeupdate, which
--- rejects UPDATE/DELETE without one. The previous version tripped over
--- exactly this and the reset had to be moved to the client.
+-- Обратите внимание на WHERE: Supabase работает с pg_safeupdate, который
+-- отвергает UPDATE/DELETE без него. Предыдущая версия спотыкалась ровно
+-- об это, и сброс пришлось унести на клиент.
 -- ---------------------------------------------------------------------
 create or replace function public.reset_thinking(p_game_id uuid)
 returns void
@@ -120,7 +120,7 @@ security definer
 set search_path = public
 as $$
 begin
-    -- security definer bypasses RLS, so the role check has to be here.
+    -- security definer обходит RLS, поэтому проверка роли обязана быть здесь.
     if not public.is_admin() then
         raise exception 'admin only' using errcode = 'P0001';
     end if;
@@ -139,12 +139,12 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
--- Undo one accidental buzz for a participant: drop one penalty step and
--- release the answering slot if they are holding it.
+-- Отмена одного случайного нажатия: снять один шаг штрафа и освободить
+-- слот отвечающего, если игрок его занимает.
 --
--- Both halves matter. Clearing only the penalty leaves the player stuck
--- as "answering"; clearing only the slot leaves them waiting for a
--- penalty they never earned.
+-- Важны обе половины. Снять только штраф — игрок залипнет в статусе
+-- «отвечает»; снять только слот — останется ждать штраф, которого не
+-- заслужил.
 -- ---------------------------------------------------------------------
 create or replace function public.reduce_penalty(p_participant_id uuid)
 returns void
@@ -156,7 +156,7 @@ declare
     v_game_id uuid;
     v_step    integer;
 begin
-    -- security definer bypasses RLS, so the role check has to be here.
+    -- security definer обходит RLS, поэтому проверка роли обязана быть здесь.
     if not public.is_admin() then
         raise exception 'admin only' using errcode = 'P0001';
     end if;
@@ -181,12 +181,10 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
--- Trigger: a buzz is only allowed once the player's cooldown has
--- elapsed on the T axis.
+-- Триггер: нажать можно, только когда личный кулдаун истёк по оси T.
 --
--- The client already hides the button, but that is cosmetic -- this is
--- the check that actually holds when someone's clock is wrong or they
--- poke the API directly.
+-- Клиент и так гасит кнопку, но это косметика — вот проверка, которая
+-- держит, когда у кого-то врут часы или кто-то полез в API напрямую.
 -- ---------------------------------------------------------------------
 create or replace function public.buzz_guard()
 returns trigger
@@ -205,7 +203,7 @@ begin
     v_now := public.think_now(new.game_id);
 
     if v_until is not null and v_now < v_until then
-        raise exception 'penalty_active: % ms left', (v_until - v_now)
+        raise exception 'penalty_active: осталось % мс', (v_until - v_now)
             using errcode = 'P0001';
     end if;
 
@@ -219,8 +217,8 @@ create trigger buzz_guard_before_insert
     execute function public.buzz_guard();
 
 -- ---------------------------------------------------------------------
--- Trigger: the axis freezes while someone is answering and resumes when
--- the slot is released, so cooldowns only tick during open play.
+-- Триггер: ось замерзает, пока кто-то отвечает, и возобновляется, когда
+-- слот освобождён, — чтобы кулдауны тикали только в открытой игре.
 -- ---------------------------------------------------------------------
 create or replace function public.buzz_freeze_axis()
 returns trigger
@@ -244,8 +242,8 @@ create trigger buzz_freeze_axis_after
     execute function public.buzz_freeze_axis();
 
 -- ---------------------------------------------------------------------
--- Trigger: an accepted answer costs the answering player one penalty
--- step, measured from the current position of the axis.
+-- Триггер: принятый ответ стоит игроку одного шага штрафа, отсчитанного
+-- от текущего положения оси.
 -- ---------------------------------------------------------------------
 create or replace function public.answer_applies_penalty()
 returns trigger
@@ -274,8 +272,8 @@ create trigger answer_applies_penalty_after_insert
     execute function public.answer_applies_penalty();
 
 -- ---------------------------------------------------------------------
--- Trigger: create a profile row whenever someone signs up, so the app
--- never has to deal with an authenticated user that has no profile.
+-- Триггер: заводим строку profile при регистрации, чтобы приложение
+-- никогда не сталкивалось с аутентифицированным пользователем без профиля.
 -- ---------------------------------------------------------------------
 create or replace function public.handle_new_user()
 returns trigger

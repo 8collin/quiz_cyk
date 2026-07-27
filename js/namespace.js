@@ -1,16 +1,16 @@
 /**
- * Single global the whole application hangs off.
+ * Единственная глобальная переменная, на которой висит всё приложение.
  *
- * There is no module system here: index.html loads plain <script> tags so
- * the page can be opened straight from disk, and ES modules are blocked by
- * CORS on file://. Every other file therefore starts with
+ * Модульной системы здесь нет: index.html подключает обычные <script>,
+ * чтобы страницу можно было открыть прямо с диска, а ES-модули на file://
+ * блокируются CORS-ом. Поэтому каждый следующий файл начинается с
  *
- *     Quiz.something = { ... };
+ *     Quiz.что_то = { ... };
  *
- * and may only reach for pieces that index.html loads *earlier* than it.
- * Keep that order in mind when adding a file.
+ * и вправе трогать только то, что index.html подключает РАНЬШЕ него.
+ * Держите это в голове, когда добавляете файл.
  */
 var Quiz = {
-    /** Build marker, handy when a stale copy is open on someone's phone. */
+    /** Метка сборки — пригодится, когда на чьём-то телефоне открыта старая копия. */
     VERSION: '0.1.0-skeleton'
 };

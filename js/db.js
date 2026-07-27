@@ -1,9 +1,9 @@
 /**
- * Supabase client plus every query the app makes.
+ * Клиент Supabase и все запросы приложения.
  *
- * All table and column names live in this one file. Nothing above it
- * should mention `.from('participant')` or a column string — if the schema
- * moves, only this file follows.
+ * Имена таблиц и колонок живут только в этом файле. Ничто выше не должно
+ * упоминать `.from('participant')` или строковое имя колонки — если схема
+ * поедет, правится один файл.
  */
 Quiz.db = {
     client: null,
@@ -23,10 +23,10 @@ Quiz.db = {
     },
 
     /**
-     * Unwraps the { data, error } envelope so callers can just await a
-     * value. Errors are thrown with the Postgres code preserved on
-     * `err.code`, which the buzzer relies on to tell 23505 (someone beat
-     * me to it) from P0001 (still on cooldown).
+     * Разворачивает обёртку { data, error }, чтобы вызывающий код просто
+     * ждал значение. Ошибка бросается с сохранением кода Postgres в
+     * `err.code` — на него опирается буззер, чтобы отличить 23505 (меня
+     * опередили) от P0001 (ещё на кулдауне).
      */
     unwrap: function (result) {
         if (result.error) {
@@ -38,16 +38,16 @@ Quiz.db = {
         return result.data;
     }
 
-    // --- Queries are added here as each feature lands. Planned shape:
+    // --- Запросы добавляются сюда по мере готовности функций. Планируемый набор:
     //
-    //   getGame(gameId)              -> game row
-    //   getQuestions(gameId)         -> ordered question rows
-    //   getParticipants(gameId)      -> participant rows
-    //   getCurrentBuzz(gameId)       -> buzz row or null
-    //   getAnswerLog(questionId)     -> answer_log rows for the badge
-    //   getRevealedAnswer(questionId)-> question_answer row; RLS returns
-    //                                   nothing until the host reveals it
-    //   replaceQuestions(gameId, qs) -> wipes and re-inserts from Excel
-    //   setCurrentQuestion(...)      -> host navigation
-    //   insertBuzz(gameId, partId)   -> the atomic grab, see js/buzzer.js
+    //   getGame(gameId)               -> строка game
+    //   getQuestions(gameId)          -> строки question по порядку
+    //   getParticipants(gameId)       -> строки participant
+    //   getCurrentBuzz(gameId)        -> строка buzz или null
+    //   getAnswerLog(questionId)      -> строки answer_log для бейджа
+    //   getRevealedAnswer(questionId) -> строка question_answer; RLS не вернёт
+    //                                    ничего, пока ведущий не открыл ответ
+    //   replaceQuestions(gameId, qs)  -> стереть и залить заново из Excel
+    //   setCurrentQuestion(...)       -> навигация ведущего
+    //   insertBuzz(gameId, partId)    -> атомарный захват слота, см. js/buzzer.js
 };

@@ -1,18 +1,18 @@
 /**
- * Sign in / sign out on top of Supabase Auth.
+ * Вход и выход поверх Supabase Auth.
  *
- * Passwords are never seen, stored or compared by this code — that is the
- * whole point of moving off the old `select * from quiz_users where
- * login=? and password=?`, which kept them in plain text and let anyone
- * with the anon key read the table.
+ * Пароли этот код не видит, не хранит и не сравнивает — ради этого и был
+ * оставлен старый `select * from quiz_users where login=? and password=?`,
+ * который держал их открытым текстом и позволял прочитать таблицу любому,
+ * у кого есть anon-ключ.
  *
- * TODO(skeleton): implement
- *   signIn(email, password) — supabase.auth.signInWithPassword, then load
- *                             the profile row and hand it to Quiz.store
+ * TODO(скелет): реализовать
+ *   signIn(email, password) — supabase.auth.signInWithPassword, затем
+ *                             загрузить строку profile и положить в Quiz.store
  *   signOut()               — supabase.auth.signOut + Quiz.store.reset
- *   restoreSession()        — supabase.auth.getSession on startup; the SDK
- *                             already persists it in localStorage, so a
- *                             reload should not ask for the password again
- *   onAuthChange(cb)        — react to token refresh / expiry
+ *   restoreSession()        — supabase.auth.getSession при старте; SDK сам
+ *                             хранит сессию в localStorage, поэтому после
+ *                             перезагрузки пароль спрашивать заново не нужно
+ *   onAuthChange(cb)        — реакция на обновление и истечение токена
  */
 Quiz.auth = {};
