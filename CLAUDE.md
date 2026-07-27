@@ -140,9 +140,14 @@ Do not claim a change works if you have not actually loaded the page.
 never re-reads from disk. Serve the folder instead — `.claude/launch.json`
 defines a `quiz` configuration that runs `python -m http.server 8000`.
 
-Open two tabs on **different origins** so they get separate `localStorage`
-and therefore separate sessions — `http://localhost:8000` for the host and
-`http://127.0.0.1:8000` for a player. Same server, two logins.
+Roles need **different origins**, or they share `localStorage` and thus one
+session. Port is part of the origin, so `launch.json` defines one server
+per role: 8000 host, 8123 player one, 8001 player two.
+
+Do not reach for `127.0.0.1` as a second origin. It looks equivalent to
+`localhost` and is not: the Unreal Editor binds `127.0.0.1:8000`
+specifically, and a specific binding beats the `::`/`0.0.0.0` one, so the
+page silently comes back as an Epic Games error payload.
 
 Signing in: passwords must not pass through the agent, so there is no
 literal to type. The maintainer keeps `js/dev.local.js` outside git

@@ -6,6 +6,18 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8000"],
       "port": 8000
+    },
+    {
+      "name": "quiz-player-1",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8123"],
+      "port": 8123
+    },
+    {
+      "name": "quiz-player-2",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8001"],
+      "port": 8001
     }
   ]
 }

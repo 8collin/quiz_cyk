@@ -121,7 +121,8 @@
     padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
 }
 
-/* Цвета четырёх состояний выставляет js/ui/buzzer.js. */
+/* Состояние кнопки — это класс, который вешает js/ui/buzzer.js; цвета
+   живут здесь, как и требует tokens.css. Без класса кнопка свободна. */
 .btn-buzzer {
     width: 80%;
     height: 64px;
@@ -143,3 +144,24 @@
     box-shadow: 0 0 0 #991b1b, 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 .btn-buzzer:disabled { cursor: not-allowed; }
+
+/* Отвечаю я. */
+.btn-buzzer.is-mine {
+    background: linear-gradient(135deg, var(--accent-green), #059669);
+    box-shadow: 0 6px 0 #047857, 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+/* Отвечает кто-то другой. */
+.btn-buzzer.is-taken {
+    background: linear-gradient(135deg, var(--bg-raised), var(--bg-card));
+    box-shadow: 0 6px 0 #1e293b, 0 8px 18px rgba(0, 0, 0, 0.4);
+    color: var(--text-muted);
+}
+
+/* Кулдаун: цифра на кнопке меняется пять раз в секунду. */
+.btn-buzzer.is-wait {
+    background: linear-gradient(135deg, var(--accent-gold), #d97706);
+    box-shadow: 0 6px 0 #b45309, 0 8px 18px rgba(0, 0, 0, 0.4);
+    /* Ширина цифры фиксирована, иначе кнопка дёргается на каждом тике. */
+    font-variant-numeric: tabular-nums;
+}

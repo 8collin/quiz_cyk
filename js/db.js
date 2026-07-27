@@ -78,6 +78,32 @@ Quiz.db = {
         );
     },
 
+    /** Строка game по id — перечитка после того, как база нас поправила. */
+    getGame: async function (gameId) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .select('*')
+                .eq('id', gameId)
+                .maybeSingle()
+        );
+    },
+
+    /**
+     * Захват слота отвечающего.
+     *
+     * Ошибку не глотаем и не переводим: по её коду вызывающий отличает
+     * «опередили» (23505) от «кулдаун ещё идёт» (P0001), а это два разных
+     * поведения. unwrap кладёт код в err.code.
+     */
+    insertBuzz: async function (gameId, participantId) {
+        return this.unwrap(
+            await this.client
+                .from('buzz')
+                .insert({ game_id: gameId, participant_id: participantId })
+        );
+    },
+
     /** Вопросы игры по возрастанию position. */
     getQuestions: async function (gameId) {
         return this.unwrap(

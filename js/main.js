@@ -18,6 +18,7 @@ Quiz.main = {
         }
 
         this.bindVolume();
+        Quiz.ui.buzzer.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
 
@@ -96,10 +97,13 @@ Quiz.main = {
     render: function () {
         Quiz.ui.question.render();
         Quiz.ui.players.render();
+        Quiz.ui.buzzer.render();
     },
 
     showLogin: function () {
         Quiz.realtime.unsubscribe();
+        // Иначе интервал отсчёта переживёт выход и продолжит тикать.
+        Quiz.ui.buzzer.stopTicking();
         Quiz.dom.setRole('unknown');
         Quiz.ui.login.show();
     },
