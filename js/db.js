@@ -36,11 +36,50 @@ Quiz.db = {
             throw err;
         }
         return result.data;
+    },
+
+    /** Профиль пользователя. null, если строки нет. */
+    getProfile: async function (userId) {
+        return this.unwrap(
+            await this.client
+                .from('profile')
+                .select('id, display_name, role')
+                .eq('id', userId)
+                .maybeSingle()
+        );
+    },
+
+    /**
+     * Идущая игра — самая свежая со статусом `running`.
+     *
+     * Заглушка до этапа 4, где у ведущего появится создание игры и выбор
+     * активной. Отдельная настройка с id игры была бы ровно таким же
+     * временным решением, только его пришлось бы ещё и вычищать из конфига.
+     */
+    getActiveGame: async function () {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .select('*')
+                .eq('status', 'running')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+        );
+    },
+
+    /**
+     * Заводит вошедшему игроку строку participant и возвращает её id.
+     * Идемпотентна, поэтому зовётся при каждом старте не глядя.
+     */
+    joinGame: async function (gameId) {
+        return this.unwrap(
+            await this.client.rpc('join_game', { p_game_id: gameId })
+        );
     }
 
     // --- Запросы добавляются сюда по мере готовности функций. Планируемый набор:
     //
-    //   getGame(gameId)               -> строка game
     //   getQuestions(gameId)          -> строки question по порядку
     //   getParticipants(gameId)       -> строки participant
     //   getCurrentBuzz(gameId)        -> строка buzz или null
