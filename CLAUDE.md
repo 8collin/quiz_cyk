@@ -126,11 +126,47 @@ markup.
 
 ## Verifying a change
 
-There is no test suite and no dev server. What you can do:
+There is no test suite. What you can do:
 
-- `node --check <file>` for JS syntax, if Node happens to be available on
-  the machine you are running on (it is not on the maintainer's).
-- Open `index.html` from disk and read the browser console.
-- SQL changes are verified by running the file in the Supabase SQL Editor.
+- `node --check <file>` for JS syntax.
+- Load the page and read the console — see the setup below.
+- Run SQL through the Supabase MCP server, or paste it into the SQL Editor.
 
 Do not claim a change works if you have not actually loaded the page.
+
+### Driving the page yourself
+
+`file://` will not do: the preview pane serves a frozen snapshot of it and
+never re-reads from disk. Serve the folder instead — `.claude/launch.json`
+defines a `quiz` configuration that runs `python -m http.server 8000`.
+
+Open two tabs on **different origins** so they get separate `localStorage`
+and therefore separate sessions — `http://localhost:8000` for the host and
+`http://127.0.0.1:8000` for a player. Same server, two logins.
+
+Signing in: passwords must not pass through the agent, so there is no
+literal to type. The maintainer keeps `js/dev.local.js` outside git
+(`.gitignore` catches `*.local.js`); it declares nothing but data:
+
+```js
+window.QuizDevAccounts = { admin: { email, password }, player1: {...} };
+```
+
+Nothing in `index.html` references it. Load it into an already-open page
+and sign in **by reference**, never by value:
+
+```js
+const acc = window.QuizDevAccounts.admin;
+const profile = await Quiz.auth.signIn(acc.email, acc.password);
+await Quiz.main.enterGame(profile);
+```
+
+Do not open that file, and do not print its contents. If it stops working,
+describe the symptom and let the maintainer look inside.
+
+The session survives in `localStorage`, so this is needed once per origin —
+until someone signs out or the token expires.
+
+Two things this setup does **not** cover, and they still need a human:
+opening `index.html` from disk (the whole reason ES modules are banned),
+and the player layout on a real phone.
