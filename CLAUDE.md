@@ -172,6 +172,13 @@ describe the symptom and let the maintainer look inside.
 The session survives in `localStorage`, so this is needed once per origin —
 until someone signs out or the token expires.
 
+**Silence a new origin as soon as you open it** — `Quiz.audio.setVolume(0)`.
+Jingles from these tabs play out of the maintainer's speakers, and volume
+is stored per origin, so every new port starts at full again. This hides
+nothing: `play()` is still called, so a blocked autoplay still surfaces,
+and which jingle fired is best checked by spying on `Quiz.audio.play`
+anyway.
+
 **The console reader prints every message twice.** One `console.log` comes
 back as two identical lines. It is the reading layer, not the page: a
 single call with a unique timestamp appears twice with the same timestamp,
