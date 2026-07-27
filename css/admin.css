@@ -1,0 +1,64 @@
+/* Host view: desktop, sidebar plus a control bar. */
+
+.role-admin .sidebar {
+    width: 300px;
+    min-width: 300px;
+    background-color: var(--bg-panel);
+    border-right: var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 10px;
+}
+
+.role-admin .top-bar {
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    border-bottom: var(--border-subtle);
+    background: rgba(15, 23, 42, 0.6);
+}
+.role-admin .admin-controls,
+.role-admin .header-actions { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+.role-admin .status { font-size: 1.2rem; font-weight: 700; color: var(--text-muted); }
+
+.role-admin .question-text { font-size: 2.2rem; margin-bottom: 25px; }
+.role-admin .media { max-height: 40vh; }
+
+.btn-add-player {
+    width: 100%;
+    background: rgba(14, 165, 233, 0.1);
+    color: var(--accent-blue);
+    border: 2px dashed rgba(14, 165, 233, 0.4);
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* The answer panel — host only, always visible once a game is loaded. */
+.answer-preview {
+    margin-top: 20px;
+    padding: 30px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 2px dashed var(--accent-gold);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.answer-preview-title {
+    color: var(--accent-gold);
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.answer-text { font-size: 1.8rem; color: var(--accent-gold); margin-bottom: 20px; }

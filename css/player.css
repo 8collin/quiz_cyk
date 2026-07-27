@@ -1,0 +1,137 @@
+/* Player view: phone, single column, no sidebar chrome.
+
+   Same markup as the host view, re-laid-out entirely in CSS. Note the
+   safe-area insets — without them the fixed header sits under the notch. */
+
+.role-player {
+    width: 100vw;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: calc(74px + env(safe-area-inset-top)) 0 0;
+    background: radial-gradient(circle at center, var(--bg-panel) 0%, var(--bg-base) 100%);
+}
+
+.role-player #screen-game { flex-direction: column; align-items: center; width: 100%; }
+.role-player .sidebar,
+.role-player .main-content { background: transparent; border: none; }
+
+.role-player .top-bar {
+    position: fixed;
+    top: 20px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 400px;
+    height: calc(50px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    z-index: 50;
+}
+.role-player .volume-slider { width: 90px; }
+
+/* Scoreboard: fixed to the top, capped so the question always has room. */
+.role-player .sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 400px;
+    max-height: 42vh;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.role-player .main-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 400px;
+    padding: 0 16px;
+}
+
+.role-player .question-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    padding: 16px;
+    justify-content: flex-start;
+    background: rgba(30, 41, 59, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: var(--border-subtle);
+    border-radius: 12px;
+}
+.role-player .question-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.45;
+    margin-bottom: 12px;
+    color: var(--text-soft);
+}
+.role-player .media { width: 100%; max-width: 100%; border-width: 2px; margin-bottom: 10px; }
+
+.role-player .player-card {
+    height: 44px;
+    padding: 0 16px;
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: var(--border-subtle);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.role-player .player-name  { font-size: 1.1rem; font-weight: 700; color: var(--text-soft); }
+.role-player .player-score { font-size: 1.4rem; font-weight: 900; color: var(--accent-blue); }
+
+.role-player .is-answering {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--accent-green);
+    animation: pulse-green 1.2s infinite alternate;
+}
+@keyframes pulse-green {
+    from { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); }
+    to   { box-shadow: 0 0 16px rgba(16, 185, 129, 0.8); border-color: var(--accent-green); }
+}
+
+.role-player .action-area {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+}
+
+/* Colours for the four states are set by js/ui/buzzer.js. */
+.btn-buzzer {
+    width: 80%;
+    height: 64px;
+    border: none;
+    border-radius: var(--radius-lg);
+    color: white;
+    font-family: inherit;
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--accent-red), #dc2626);
+    box-shadow: 0 6px 0 #991b1b, 0 8px 18px rgba(0, 0, 0, 0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.btn-buzzer:active:not(:disabled) {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #991b1b, 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+.btn-buzzer:disabled { cursor: not-allowed; }

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Викторина</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/player.css">
+</head>
+<body class="role-unknown">
+
+    <div id="screen-login" class="screen">
+        <form class="login-box" id="login-form" autocomplete="on">
+            <h1 class="login-title">Вход в игру</h1>
+            <p class="login-error" id="login-error" role="alert"></p>
+            <input type="email"    id="login-email" class="login-input" placeholder="E-mail" autocomplete="username" required>
+            <input type="password" id="login-password" class="login-input" placeholder="Пароль" autocomplete="current-password" required>
+            <button type="submit" class="login-submit">Войти</button>
+        </form>
+    </div>
+
+    <div id="screen-game" class="screen" hidden>
+        <aside class="sidebar">
+            <button class="btn-add-player admin-only" id="btn-add-player">+ Игрок</button>
+            <div class="players-scroll" id="players-list"></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="admin-controls admin-only">
+                    <input type="file" id="input-xlsx" accept=".xlsx,.xls" hidden>
+                    <label for="input-xlsx" class="btn">Загрузить</label>
+                    <button class="btn btn-circle" id="btn-prev" title="Предыдущий вопрос">◀</button>
+                    <button class="btn btn-circle" id="btn-next" title="Следующий вопрос">▶</button>
+                    <button class="btn" id="btn-toggle-answer">Ответ</button>
+                    <button class="btn" id="btn-reset-penalties" title="Обнулить ожидание у всех">Сброс ⏱</button>
+                    <button class="btn" id="btn-restart">Сброс игры</button>
+                    <button class="btn btn-circle" id="btn-intro" title="Проиграть интро">🎵</button>
+                </div>
+
+                <div class="header-actions">
+                    <div class="status admin-only" id="status-text"></div>
+                    <div class="volume-control" title="Громкость">
+                        <span class="volume-icon">🔊</span>
+                        <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100">
+                    </div>
+                    <button class="btn" id="btn-logout">Выйти</button>
+                </div>
+            </header>
+
+            <section class="question-area" id="question-area">
+                <div class="question-text" id="question-text"></div>
+                <img class="media" id="question-image" alt="" hidden>
+
+                <div class="answer-preview admin-only" id="answer-preview" hidden>
+                    <div class="answer-preview-title">Ответ</div>
+                    <div class="answer-text" id="answer-text"></div>
+                    <img class="media" id="answer-image" alt="" hidden>
+                </div>
+            </section>
+
+            <div class="action-area player-only">
+                <button class="btn-buzzer" id="btn-buzzer">ЕСТЬ ОТВЕТ!</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================================================================
+         Third-party libraries. Both are classic scripts exposing globals
+         (window.supabase, window.XLSX), so they work over file:// too.
+         ================================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- ================================================================
+         Application scripts. No ES modules here (the page must open from
+         file://), so LOAD ORDER MATTERS: foundation first, then whatever
+         builds on it, main.js last. Each file attaches its own piece to
+         the single global `Quiz` object.
+         ================================================================ -->
+    <script src="js/namespace.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/dom.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/timing.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/excel.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/buzzer.js"></script>
+    <script src="js/realtime.js"></script>
+    <script src="js/ui/login.js"></script>
+    <script src="js/ui/players.js"></script>
+    <script src="js/ui/question.js"></script>
+    <script src="js/ui/buzzer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

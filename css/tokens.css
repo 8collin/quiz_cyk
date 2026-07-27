@@ -1,0 +1,24 @@
+/* Design tokens. The palette carried over from the previous version —
+   slate background, one accent per meaning. Nothing else should hard-code
+   a colour. */
+:root {
+    --bg-base:   #0f172a;
+    --bg-panel:  #1e293b;
+    --bg-card:   #334155;
+    --bg-raised: #475569;
+
+    --text-main:  #f8fafc;
+    --text-muted: #94a3b8;
+    --text-soft:  #e2e8f0;
+
+    --accent-red:   #ef4444;
+    --accent-blue:  #0ea5e9;
+    --accent-green: #10b981;
+    --accent-gold:  #f59e0b;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+
+    --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
+}

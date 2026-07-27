@@ -1,0 +1,10 @@
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*~
+
+# Local experiments that should never reach the published page
+scratch/
+*.local.js

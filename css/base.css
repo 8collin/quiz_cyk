@@ -1,0 +1,173 @@
+/* Reset, shared layout, and the role switch.
+   Anything specific to one role belongs in admin.css / player.css. */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Text selection is off everywhere: on a phone a long press on the buzzer
+   otherwise pops the selection menu mid-round. */
+body {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+
+    font-family: 'Nunito', system-ui, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* --- Role switch ---------------------------------------------------
+   One markup, two applications. Until the role is known both sets stay
+   hidden, so nothing flashes on screen before sign-in. */
+.role-unknown .admin-only,
+.role-unknown .player-only,
+.role-player  .admin-only,
+.role-admin   .player-only { display: none !important; }
+
+[hidden] { display: none !important; }
+
+/* --- Login ---------------------------------------------------------- */
+#screen-login {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-base);
+    z-index: 100;
+    padding: 20px;
+}
+.login-box {
+    background: var(--bg-panel);
+    padding: 40px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.login-title { text-align: center; color: var(--accent-blue); font-size: 1.5rem; }
+.login-error { color: var(--accent-red); font-weight: 700; text-align: center; min-height: 1.2em; }
+.login-input {
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--bg-raised);
+    background: var(--bg-base);
+    color: var(--text-main);
+    font-size: 1.1rem;
+    font-family: inherit;
+    user-select: text;
+    -webkit-user-select: text;
+}
+.login-submit {
+    padding: 15px;
+    background: var(--accent-blue);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* --- Shared shell --------------------------------------------------- */
+#screen-game { display: flex; height: 100%; }
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: radial-gradient(circle at center, var(--bg-panel) 0%, var(--bg-base) 100%);
+}
+
+.question-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    overflow-y: auto;
+    padding: 40px 30px;
+}
+.question-text {
+    font-weight: 800;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
+.media {
+    max-width: 90%;
+    border-radius: var(--radius-md);
+    border: 3px solid var(--bg-card);
+    object-fit: contain;
+    margin-bottom: 20px;
+}
+
+.players-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.players-scroll::-webkit-scrollbar { width: 6px; }
+.players-scroll::-webkit-scrollbar-thumb { background: var(--bg-raised); border-radius: 10px; }
+
+.btn {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.btn:hover { background-color: var(--bg-raised); }
+.btn-circle { width: 42px; height: 42px; padding: 0; border-radius: 50%; }
+
+.volume-control { display: flex; align-items: center; gap: 6px; }
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-raised);
+    outline: none;
+    cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    cursor: pointer;
+}
+.volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent-blue);
+    cursor: pointer;
+}
