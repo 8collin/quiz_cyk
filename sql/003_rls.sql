@@ -49,6 +49,15 @@ security definer
 set search_path = public
 as $$
 begin
+    -- Сессии без auth.uid() — это не клиент: SQL Editor, миграция, service_role.
+    -- Через PostgREST сюда не пройти: все политики на profile выданы роли
+    -- authenticated, у которой auth.uid() всегда есть, а anon отсекает RLS
+    -- ещё до триггера. Без этой оговорки первого админа назначить нельзя
+    -- вообще никак — админов нет, значит и права выдать роль нет ни у кого.
+    if auth.uid() is null then
+        return new;
+    end if;
+
     if new.role is distinct from old.role and not public.is_admin() then
         raise exception 'менять роль запрещено' using errcode = 'P0001';
     end if;
