@@ -272,6 +272,54 @@ create trigger answer_applies_penalty_after_insert
     execute function public.answer_applies_penalty();
 
 -- ---------------------------------------------------------------------
+-- Вход игрока в игру.
+--
+-- Строка `participant` не может появиться от самого игрока напрямую:
+-- писать в эту таблицу разрешено только ведущему (см. 003_rls.sql), иначе
+-- игрок правил бы себе счёт. Поэтому вход идёт через эту функцию —
+-- она создаёт строку от имени владельца, но заполняет profile_id
+-- исключительно из auth.uid(), так что записаться за другого нельзя.
+--
+-- Идемпотентна: повторный вызов возвращает уже существующую строку. Это и
+-- есть нормальный путь после перезагрузки страницы.
+--
+-- Ведущий по-прежнему может добавить «ручного» игрока без аккаунта —
+-- у того profile_id остаётся null, и под ограничение unique он не попадает,
+-- потому что в Postgres NULL не конфликтует с NULL.
+-- ---------------------------------------------------------------------
+create or replace function public.join_game(p_game_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_participant_id uuid;
+    v_name           text;
+begin
+    if auth.uid() is null then
+        raise exception 'нужен вход' using errcode = 'P0001';
+    end if;
+
+    if not exists (select 1 from public.game where id = p_game_id) then
+        raise exception 'игра не найдена' using errcode = 'P0001';
+    end if;
+
+    select display_name into v_name
+      from public.profile
+     where id = auth.uid();
+
+    insert into public.participant (game_id, profile_id, display_name)
+    values (p_game_id, auth.uid(), coalesce(v_name, 'Игрок'))
+    on conflict (game_id, profile_id) do update
+       set display_name = excluded.display_name
+    returning id into v_participant_id;
+
+    return v_participant_id;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
 -- Триггер: заводим строку profile при регистрации, чтобы приложение
 -- никогда не сталкивалось с аутентифицированным пользователем без профиля.
 -- ---------------------------------------------------------------------

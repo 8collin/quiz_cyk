@@ -162,3 +162,9 @@ grant execute on function public.server_now()         to authenticated;
 grant execute on function public.think_now(uuid)      to authenticated;
 grant execute on function public.reset_thinking(uuid) to authenticated;
 grant execute on function public.reduce_penalty(uuid) to authenticated;
+
+-- Единственная функция, которую вызывает игрок, а не ведущий: она пишет
+-- строку participant за него, потому что напрямую в эту таблицу писать
+-- разрешено только ведущему. profile_id внутри берётся из auth.uid(),
+-- подставить чужой нельзя.
+grant execute on function public.join_game(uuid)      to authenticated;

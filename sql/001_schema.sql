@@ -174,3 +174,15 @@ alter publication supabase_realtime add table public.game;
 alter publication supabase_realtime add table public.participant;
 alter publication supabase_realtime add table public.buzz;
 alter publication supabase_realtime add table public.answer_log;
+
+-- В событии DELETE по умолчанию приезжает только первичный ключ — ни
+-- game_id, ни participant_id. Это ломает сразу две вещи: серверный фильтр
+-- `game_id=eq.<id>` по такому событию не совпадает вообще (клиент молча не
+-- узнаёт, что слот освободили), и даже если бы дошло — непонятно, чей он
+-- был. `replica identity full` кладёт в old_record строку целиком.
+--
+-- Нужно ровно там, где строки удаляются: buzz (снятие отвечающего,
+-- reset_thinking, reduce_penalty) и participant (удаление игрока).
+-- В game только UPDATE, в answer_log только INSERT — им не требуется.
+alter table public.buzz        replica identity full;
+alter table public.participant replica identity full;
