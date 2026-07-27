@@ -76,16 +76,68 @@ Quiz.db = {
         return this.unwrap(
             await this.client.rpc('join_game', { p_game_id: gameId })
         );
+    },
+
+    /** Вопросы игры по возрастанию position. */
+    getQuestions: async function (gameId) {
+        return this.unwrap(
+            await this.client
+                .from('question')
+                .select('id, position, text, image_url')
+                .eq('game_id', gameId)
+                .order('position', { ascending: true })
+        );
+    },
+
+    getParticipants: async function (gameId) {
+        return this.unwrap(
+            await this.client
+                .from('participant')
+                .select('id, profile_id, display_name, score, penalty_until_ms, sound_key')
+                .eq('game_id', gameId)
+        );
+    },
+
+    /** Кто отвечает прямо сейчас. null, когда слот свободен. */
+    getCurrentBuzz: async function (gameId) {
+        return this.unwrap(
+            await this.client
+                .from('buzz')
+                .select('id, game_id, participant_id, created_at')
+                .eq('game_id', gameId)
+                .maybeSingle()
+        );
+    },
+
+    getAnswerLog: async function (questionId) {
+        return this.unwrap(
+            await this.client
+                .from('answer_log')
+                .select('id, question_id, participant_id, delta, created_at')
+                .eq('question_id', questionId)
+        );
+    },
+
+    /**
+     * Ответ на вопрос — если его вообще разрешено видеть.
+     *
+     * Никакой проверки «а показал ли ведущий» здесь нет и быть не должно:
+     * решает политика question_answer_select_when_revealed. Ведущему строка
+     * приходит всегда, игроку — только пока это текущий вопрос и выставлен
+     * show_answer. Пустой ответ здесь означает «нельзя», а не «нет данных».
+     */
+    getRevealedAnswer: async function (questionId) {
+        return this.unwrap(
+            await this.client
+                .from('question_answer')
+                .select('question_id, text, image_url')
+                .eq('question_id', questionId)
+                .maybeSingle()
+        );
     }
 
     // --- Запросы добавляются сюда по мере готовности функций. Планируемый набор:
     //
-    //   getQuestions(gameId)          -> строки question по порядку
-    //   getParticipants(gameId)       -> строки participant
-    //   getCurrentBuzz(gameId)        -> строка buzz или null
-    //   getAnswerLog(questionId)      -> строки answer_log для бейджа
-    //   getRevealedAnswer(questionId) -> строка question_answer; RLS не вернёт
-    //                                    ничего, пока ведущий не открыл ответ
     //   replaceQuestions(gameId, qs)  -> стереть и залить заново из Excel
     //   setCurrentQuestion(...)       -> навигация ведущего
     //   insertBuzz(gameId, partId)    -> атомарный захват слота, см. js/buzzer.js

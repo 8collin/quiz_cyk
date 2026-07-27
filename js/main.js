@@ -3,8 +3,8 @@
  * приложение.
  *
  * Сделано на этапе 1: вход, восстановление сессии, выход, роль на <body>,
- * громкость. Загрузка игры здесь пока сведена к строке `game` — вопросы,
- * участники, буззер и realtime приедут на этапе 2.
+ * громкость. На этапе 2: первичная загрузка состояния, подписки realtime
+ * и отрисовка. Буззер и панель ведущего — этапы 3 и 4.
  */
 Quiz.main = {
     start: async function () {
@@ -51,31 +51,61 @@ Quiz.main = {
             // Часы — раньше всего, что покажет время. Иначе первая отрисовка
             // обратного отсчёта уйдёт по часам телефона, а они врут.
             await Quiz.timing.syncClock();
-
-            var game = await Quiz.db.getActiveGame();
-            Quiz.store.game = game;
-            Quiz.timing.applyGameRow(game);
-
-            if (!game) {
-                console.log('Игр со статусом running нет — показывать нечего.');
-                return;
-            }
-            // Ведущий в списке участников не появляется: он не играет.
-            if (!Quiz.store.isAdmin()) {
-                await Quiz.db.joinGame(game.id);
-            }
+            await this.loadGame();
         } catch (err) {
             // Вход при этом состоялся, поэтому обратно на форму не выкидываем.
             console.error('Не удалось загрузить игру:', err.message);
         }
     },
 
+    /**
+     * Первичная загрузка состояния и подписка на изменения.
+     *
+     * Всё, что живёт не дольше текущего вопроса, читает
+     * realtime.reloadQuestionScoped() — та же функция, которой потом
+     * пользуются обработчики при смене вопроса. Один путь вместо двух:
+     * иначе первая загрузка и обновление по ходу игры разъедутся, а
+     * расходятся такие пары всегда молча.
+     */
+    loadGame: async function () {
+        var game = await Quiz.db.getActiveGame();
+        Quiz.store.game = game;
+        Quiz.timing.applyGameRow(game);
+
+        if (!game) {
+            console.log('Игр со статусом running нет — показывать нечего.');
+            this.render();
+            return;
+        }
+
+        // Ведущий в списке участников не появляется: он не играет.
+        // Строку заводим до чтения участников, иначе игрок не увидит себя.
+        if (!Quiz.store.isAdmin()) {
+            await Quiz.db.joinGame(game.id);
+        }
+
+        Quiz.store.questions = await Quiz.db.getQuestions(game.id);
+        await Quiz.realtime.reloadQuestionScoped();
+
+        Quiz.realtime.onChange = function () { Quiz.main.render(); };
+        Quiz.realtime.subscribe(game.id);
+
+        this.render();
+    },
+
+    render: function () {
+        Quiz.ui.question.render();
+        Quiz.ui.players.render();
+    },
+
     showLogin: function () {
+        Quiz.realtime.unsubscribe();
         Quiz.dom.setRole('unknown');
         Quiz.ui.login.show();
     },
 
     signOut: async function () {
+        Quiz.realtime.unsubscribe();
         try {
             await Quiz.auth.signOut();
         } catch (err) {

@@ -18,9 +18,14 @@ logic is stubbed and marked `TODO(скелет)`. See `TODO.md`.
 
 ## Hard constraints — do not violate these
 
-The machine this project is developed on has **no Node.js and no
-toolchain**. That is a physical constraint, not a preference, so "let's
-just add Vite" is never an acceptable suggestion.
+The machine this project will be developed on has **no Node.js and no
+toolchain**. The current machine happens to have both, but the project
+must never come to depend on them, so "let's just add Vite" is never an
+acceptable suggestion.
+
+Tooling that stays outside the shipped page is fine to use here and now —
+a syntax check, an MCP server talking to Supabase. The test is whether
+the repository still works after it is taken away.
 
 - **No build step.** No TypeScript, no bundler, no npm, no transpilation.
 - **Classic `<script src>` tags, never ES modules.** `index.html` must

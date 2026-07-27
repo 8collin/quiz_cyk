@@ -41,6 +41,25 @@
     cursor: pointer;
 }
 
+/* Карточка игрока. Своя, а не общая с видом игрока: у ведущего строка
+   шире и на этапе 4 обрастёт кнопками оценки. */
+.role-admin .player-card {
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: var(--border-subtle);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.role-admin .player-name  { font-size: 1.1rem; font-weight: 700; }
+.role-admin .player-score { font-size: 1.4rem; font-weight: 900; color: var(--accent-blue); }
+.role-admin .is-answering {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: var(--accent-green);
+}
+
 /* Панель ответа — только у ведущего, видна всегда, когда игра загружена. */
 .answer-preview {
     margin-top: 20px;
