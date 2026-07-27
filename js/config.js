@@ -7,8 +7,11 @@
  * Ключ service_role сюда класть нельзя никогда.
  */
 Quiz.config = {
-    SUPABASE_URL: 'PASTE_YOUR_SUPABASE_URL_HERE',
-    SUPABASE_ANON_KEY: 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE',
+    SUPABASE_URL: 'https://hewggiqyaacyzveocvyo.supabase.co',
+
+    /** Publishable key — пришёл на смену старому anon. Публичен так же,
+     *  как и тот, но отзывается отдельно, не задевая остальные ключи. */
+    SUPABASE_ANON_KEY: 'sb_publishable_jHQh0Q6-gkMM8ZtqTDwYrg_-j0Ak81N',
 
     /** Папка с джинглами, относительно index.html. */
     AUDIO_PATH: 'audio/',

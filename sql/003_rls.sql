@@ -152,11 +152,36 @@ create policy answer_log_admin_all on public.answer_log
 -- ---------------------------------------------------------------------
 -- Права на выполнение функций
 --
--- freeze/resume отзываем у всех: их дело — вызываться из триггеров, а не
--- руками из клиента. Остальные проверяют роль внутри себя.
+-- Postgres по умолчанию раздаёт EXECUTE роли PUBLIC, а PostgREST выставляет
+-- наружу всё, до чего дотягивается `anon`, — то есть свежесозданная функция
+-- автоматически оказывается ручкой `/rest/v1/rpc/<имя>` для кого угодно.
+-- Поэтому здесь сначала отзываем, и только потом раздаём поимённо. Одного
+-- `grant … to authenticated` недостаточно: он ничего не отнимает.
+--
+-- Триггерные функции не должен звать никто: их дело — срабатывать на
+-- изменение строки. Право на выполнение Postgres проверяет в момент
+-- CREATE TRIGGER, а не при срабатывании, так что отзыв им не мешает.
 -- ---------------------------------------------------------------------
-revoke execute on function public.freeze_thinking(uuid) from public, anon, authenticated;
-revoke execute on function public.resume_thinking(uuid) from public, anon, authenticated;
+revoke execute on function public.freeze_thinking(uuid)        from public, anon, authenticated;
+revoke execute on function public.resume_thinking(uuid)        from public, anon, authenticated;
+revoke execute on function public.buzz_guard()                 from public, anon, authenticated;
+revoke execute on function public.buzz_freeze_axis()           from public, anon, authenticated;
+revoke execute on function public.answer_applies_penalty()     from public, anon, authenticated;
+revoke execute on function public.handle_new_user()            from public, anon, authenticated;
+revoke execute on function public.guard_profile_role()         from public, anon, authenticated;
+
+revoke execute on function public.is_admin()              from public, anon;
+revoke execute on function public.my_participant_id(uuid) from public, anon;
+revoke execute on function public.server_now()            from public, anon;
+revoke execute on function public.think_now(uuid)         from public, anon;
+revoke execute on function public.reset_thinking(uuid)    from public, anon;
+revoke execute on function public.reduce_penalty(uuid)    from public, anon;
+revoke execute on function public.join_game(uuid)         from public, anon;
+
+-- is_admin() и my_participant_id() вызывает не клиент, а сами политики выше —
+-- выполняются они от имени спрашивающей роли, поэтому право ей необходимо.
+grant execute on function public.is_admin()              to authenticated;
+grant execute on function public.my_participant_id(uuid) to authenticated;
 
 grant execute on function public.server_now()         to authenticated;
 grant execute on function public.think_now(uuid)      to authenticated;

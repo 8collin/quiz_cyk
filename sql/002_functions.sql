@@ -47,6 +47,7 @@ create or replace function public.server_now()
 returns timestamptz
 language sql
 stable
+set search_path = public
 as $$
     select now();
 $$;
@@ -59,6 +60,7 @@ create or replace function public.think_now(p_game_id uuid)
 returns bigint
 language sql
 stable
+set search_path = public
 as $$
     select g.think_base_ms
          + case
