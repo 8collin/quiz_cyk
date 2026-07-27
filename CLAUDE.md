@@ -131,6 +131,22 @@ There is no test suite. What you can do:
 - `node --check <file>` for JS syntax.
 - Load the page and read the console — see the setup below.
 - Run SQL through the Supabase MCP server, or paste it into the SQL Editor.
+  `.mcp.json` scopes that server to this project's ref and reads
+  `SUPABASE_ACCESS_TOKEN` from the environment, so no secret is in the
+  repository. It connects as `postgres` and therefore **bypasses RLS** —
+  to test a policy, impersonate a role instead:
+
+  ```sql
+  begin;
+  select set_config('request.jwt.claims',
+                    '{"sub":"<user uuid>","role":"authenticated"}', true);
+  set local role authenticated;
+  -- запрос, который проверяем
+  rollback;
+  ```
+
+  Remember that an `UPDATE` a policy rejects raises nothing — it changes
+  zero rows. Only `INSERT` comes back as `42501`.
 
 Do not claim a change works if you have not actually loaded the page.
 
