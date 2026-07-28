@@ -70,6 +70,36 @@
                 </div>
             </header>
 
+            <!-- Статистика. Одна разметка на обе роли и без классов роли:
+                 показана она или нет, решает флаг show_stats в строке
+                 game. Ведущему она встаёт ВМЕСТО вопроса — накрывать ему
+                 экран нельзя, под слоем осталась бы и кнопка, которой
+                 его закрывают. Игроку — слоем поверх всего, там закрывает
+                 ведущий. Стоит перед вопросом не для красоты: правило
+                 `.stats-view:not([hidden]) + .question-area` в admin.css
+                 прячет вопрос соседством, и переставить их местами
+                 значит его сломать. -->
+            <div class="stats-view" id="stats-view" hidden>
+                <div class="stats-box">
+                    <div class="stats-title">Статистика игры</div>
+                    <div class="stats-scroll">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th class="stats-name">Игрок</th>
+                                    <th>−1</th>
+                                    <th>0</th>
+                                    <th>+1</th>
+                                    <th>+2</th>
+                                    <th class="stats-score">Очки</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <section class="question-area" id="question-area">
                 <div class="question-text" id="question-text"></div>
                 <img class="media" id="question-image" alt="" hidden>
@@ -93,32 +123,6 @@
                 <button class="btn-buzzer" id="btn-buzzer" disabled>ОЖИДАНИЕ</button>
             </div>
         </main>
-
-        <!-- Слой статистики. Одна разметка на обе роли и без классов
-             роли: показан он или нет, решает флаг show_stats в строке
-             game, и записать это правило вторым местом в разметке
-             значило бы дать ему разъехаться. Шапка таблицы статична,
-             строки собирает js/ui/stats.js. -->
-        <div class="stats-overlay" id="stats-overlay" hidden>
-            <div class="stats-box">
-                <div class="stats-title">Статистика игры</div>
-                <div class="stats-scroll">
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th class="stats-name">Игрок</th>
-                                <th>−1</th>
-                                <th>0</th>
-                                <th>+1</th>
-                                <th>+2</th>
-                                <th class="stats-score">Очки</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stats-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- ================================================================

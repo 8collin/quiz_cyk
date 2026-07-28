@@ -203,18 +203,14 @@ body {
 }
 
 /* --- Статистика ------------------------------------------------------
-   Слой один на обе роли, поэтому живёт здесь, а не в admin.css или
-   player.css. Выше буззера игрока (z-index 50 в player.css) и ниже
-   экрана входа (100): выход из игры обязан перекрывать всё. */
-.stats-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 80;
+   Здесь только сама таблица — она одна на обе роли. Где она появляется,
+   решают ролевые файлы: ведущему вместо вопроса (admin.css), игроку
+   слоем поверх экрана (player.css). */
+.stats-view {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(15, 23, 42, 0.88);
 }
 .stats-box {
     background: var(--bg-panel);
