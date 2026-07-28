@@ -146,9 +146,6 @@ Quiz.ui.players = {
             }));
         }
 
-        box.appendChild(this.button('⏱−', 'Отменить случайное нажатие', function () {
-            Quiz.game.reducePenalty(participant.id);
-        }));
         box.appendChild(this.button('✕', 'Удалить из игры', function () {
             if (window.confirm('Удалить ' + participant.display_name + ' из игры?')) {
                 Quiz.game.removeParticipant(participant.id);

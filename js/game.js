@@ -116,11 +116,6 @@ Quiz.game = {
         return Quiz.db.deleteBuzz(game.id);
     },
 
-    /** Отмена случайного нажатия: шаг штрафа назад и слот освободить. */
-    reducePenalty: function (participantId) {
-        return Quiz.db.reducePenalty(participantId);
-    },
-
     /** Обнулить ожидание у всех разом. */
     clearPenalties: function () {
         var game = Quiz.store.game;

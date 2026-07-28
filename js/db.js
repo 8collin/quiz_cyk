@@ -231,13 +231,6 @@ Quiz.db = {
         );
     },
 
-    /** Отмена одного случайного нажатия: шаг штрафа назад плюс слот. */
-    reducePenalty: async function (participantId) {
-        return this.unwrap(
-            await this.client.rpc('reduce_penalty', { p_participant_id: participantId })
-        );
-    },
-
     /**
      * Оценка ведущего. Счёт и штраф начисляет триггер
      * answer_applies_effects — здесь только факт ответа.
