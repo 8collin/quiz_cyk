@@ -68,8 +68,7 @@ index.html   entry point; the script order at the bottom matters
 css/         tokens.css → base.css → admin.css → player.css
 js/          foundation first, then features, main.js last
 js/ui/       rendering, one file per region of the screen
-sql/         001_schema → 002_functions → 003_rls, applied in that order
-audio/       jingles, named <sound_key>.mp3
+sql/         numbered migrations, applied in ascending order
 docs/        prose that outgrew a comment; Russian, like the rest
 ```
 
@@ -122,6 +121,13 @@ only while it is the current question and `show_answer` is set.
 
 **`security definer` functions bypass RLS**, so any of them that a client
 can call must check `is_admin()` in its own body.
+
+**A Storage object name is not a free-form string.** The `sounds` bucket
+rejects anything outside a narrow ASCII set, and the keys this game uses
+are player names — `Алина.mp3` comes back as `Invalid key`. Paths are
+generated per upload (`Quiz.ui.sounds.freshPath`), never derived from the
+key. That also dodges the public bucket's `max-age=3600`, which would
+otherwise keep serving a replaced file for an hour.
 
 **Supabase runs with `pg_safeupdate`**: `UPDATE` and `DELETE` without a
 `WHERE` clause are rejected at runtime. Always include one.
