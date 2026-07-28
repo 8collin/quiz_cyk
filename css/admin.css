@@ -41,14 +41,29 @@
     cursor: pointer;
 }
 
-/* Выбор активной игры. Шапка и так плотная, поэтому длинные названия
-   обрезаются, а не растягивают строку. */
+/* Выбор активной игры.
+   Это поле, а не кнопка. Раньше список нёс класс .btn и глушил системную
+   стрелку через appearance:none — в ряду одинаковых кнопок он от них
+   ничем не отличался, и название игры читалось как надпись на кнопке.
+   Поэтому: стрелку рисует браузер (своя означала бы цвет, прописанный
+   мимо tokens.css), фон утоплен до цвета страницы, начертание обычное
+   против жирного у кнопок, текст прижат влево.
+   Шапка и так плотная, поэтому длинные названия обрезаются, а не
+   растягивают строку. */
 .select-game {
     max-width: 180px;
-    appearance: none;
-    -webkit-appearance: none;
-    text-overflow: ellipsis;
+    padding: 9px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background-color: var(--bg-base);
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 400;
+    cursor: pointer;
 }
+.select-game:hover { border-color: rgba(255, 255, 255, 0.32); }
+.select-game:focus { outline: none; border-color: var(--accent-blue); }
 
 /* Карточка игрока. Своя, а не общая с видом игрока: у ведущего строка
    шире и несёт кнопки оценки. */
