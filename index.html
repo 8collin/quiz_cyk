@@ -178,6 +178,14 @@
         </main>
     </div>
 
+    <!-- Просмотр картинки во весь экран. Стоит снаружи #screen-game и без
+         классов роли: слой один и на вопрос, и на ответ, и на обе роли, а
+         какую картинку показать — решает клик (js/ui/lightbox.js). -->
+    <div class="lightbox" id="lightbox" hidden>
+        <button class="lightbox-close" id="lightbox-close" title="Закрыть" aria-label="Закрыть">✕</button>
+        <img class="lightbox-image" id="lightbox-image" alt="">
+    </div>
+
     <!-- ================================================================
          Сторонние библиотеки. Обе — классические скрипты, выставляющие
          глобальные объекты (window.supabase, window.XLSX), поэтому
@@ -208,6 +216,7 @@
     <script src="js/ui/admin.js"></script>
     <script src="js/ui/players.js"></script>
     <script src="js/ui/question.js"></script>
+    <script src="js/ui/lightbox.js"></script>
     <script src="js/ui/buzzer.js"></script>
     <script src="js/ui/stats.js"></script>
     <script src="js/ui/sounds.js"></script>

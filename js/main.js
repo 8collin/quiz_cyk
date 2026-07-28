@@ -32,6 +32,7 @@ Quiz.main = {
         Quiz.ui.buzzer.render();
         Quiz.ui.users.bind();
         Quiz.ui.admin.bind();
+        Quiz.ui.lightbox.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
 
@@ -153,6 +154,8 @@ Quiz.main = {
 
     render: function () {
         Quiz.ui.question.render();
+        // После вопроса: закрывает просмотр, если картинка под ним сменилась.
+        Quiz.ui.lightbox.render();
         Quiz.ui.players.render();
         Quiz.ui.buzzer.render();
         Quiz.ui.stats.render();
@@ -167,6 +170,9 @@ Quiz.main = {
         Quiz.ui.buzzer.stopTicking();
         Quiz.ui.players.stopTicking();
         Quiz.dom.setRole('unknown');
+        // Экран входа лежит выше просмотра картинки и накрыл бы его собой,
+        // а после следующего входа тот вынырнул бы обратно.
+        Quiz.ui.lightbox.close();
         // Чужое имя не должно мелькнуть в шапке при следующем входе.
         Quiz.dom.setText('my-name', '');
         Quiz.ui.login.show();

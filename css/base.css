@@ -113,12 +113,15 @@ body {
        переносить по ширине экрана. */
     white-space: pre-wrap;
 }
+/* Курсор — единственная подсказка, что картинку можно раскрыть во весь
+   экран; на телефоне подсказки нет вовсе, там пробуют пальцем. */
 .media {
     max-width: 90%;
     border-radius: var(--radius-md);
     border: 3px solid var(--bg-card);
     object-fit: contain;
     margin-bottom: 20px;
+    cursor: zoom-in;
 }
 
 .players-scroll {
@@ -208,6 +211,55 @@ body {
     background: var(--accent-blue);
     cursor: pointer;
 }
+
+/* --- Просмотр картинки -----------------------------------------------
+   Слой один на обе роли: и ведущий, и игрок раскрывают картинку вопроса
+   или ответа во весь экран. Выше статистики игрока (80) и ниже экрана
+   входа (100) — выход из игры обязан перекрывать и его.
+
+   Нижний край задан не здесь: слой останавливается над кнопкой буззера,
+   а её высота на телефоне и на широком экране разная, поэтому её ставит
+   Quiz.ui.lightbox.fit(). У ведущего кнопки нет и край остаётся внизу. */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(15, 23, 42, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    cursor: zoom-out;
+}
+/* Именно width/height, а не max-*: у вопросов попадаются маленькие файлы,
+   и карточка вопроса их растягивает по своей ширине. От «просмотра во
+   весь экран», показывающего картинку МЕЛЬЧЕ, чем она была на странице,
+   толку никакого. Поля вокруг картинки принадлежат самому <img> (так
+   работает object-fit), поэтому щелчок по ним — щелчок по картинке, и
+   закрывать просмотр обязаны оба. */
+.lightbox-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: zoom-out;
+}
+.lightbox-close {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+.lightbox-close:hover { background: var(--bg-raised); }
 
 /* --- Статистика ------------------------------------------------------
    Здесь только сама таблица — она одна на обе роли. Где она появляется,
