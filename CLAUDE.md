@@ -65,6 +65,7 @@ js/          foundation first, then features, main.js last
 js/ui/       rendering, one file per region of the screen
 sql/         001_schema → 002_functions → 003_rls, applied in that order
 audio/       jingles, named <sound_key>.mp3
+docs/        prose that outgrew a comment; Russian, like the rest
 ```
 
 One markup, two applications: the role is a class on `<body>`
