@@ -125,14 +125,6 @@ Quiz.game = {
 
     // --- Участники --------------------------------------------------------
 
-    /** Игрок без аккаунта: жать буззер он не может, счёт ведёт ведущий. */
-    addOfflinePlayer: function (name) {
-        var game = Quiz.store.game;
-        var clean = (name || '').trim();
-        if (!game || !clean) return Promise.resolve();
-        return Quiz.db.addParticipant(game.id, clean);
-    },
-
     removeParticipant: function (participantId) {
         return Quiz.db.deleteParticipant(participantId);
     },

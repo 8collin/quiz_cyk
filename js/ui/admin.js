@@ -39,11 +39,6 @@ Quiz.ui.admin = {
         Quiz.dom.on('btn-reset-penalties', 'click', function () { Quiz.game.clearPenalties(); });
         Quiz.dom.on('btn-intro', 'click', function () { Quiz.game.playIntro(); });
 
-        Quiz.dom.on('btn-add-player', 'click', function () {
-            var name = window.prompt('Имя игрока без аккаунта:');
-            if (name) Quiz.game.addOfflinePlayer(name);
-        });
-
         Quiz.dom.on('btn-add-account', 'click', function () {
             Quiz.ui.admin.createAccount();
         });

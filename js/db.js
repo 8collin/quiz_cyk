@@ -255,15 +255,6 @@ Quiz.db = {
         );
     },
 
-    /** Игрок без аккаунта: profile_id остаётся null, счёт ведёт ведущий. */
-    addParticipant: async function (gameId, displayName) {
-        return this.unwrap(
-            await this.client
-                .from('participant')
-                .insert({ game_id: gameId, display_name: displayName })
-        );
-    },
-
     deleteParticipant: async function (participantId) {
         return this.unwrap(
             await this.client.from('participant').delete().eq('id', participantId)
