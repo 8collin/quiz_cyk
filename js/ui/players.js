@@ -137,6 +137,11 @@ Quiz.ui.players = {
         box.appendChild(this.button('+1', 'Ответ аргументированный', function () {
             Quiz.game.score(participant.id, 1);
         }, 'is-plus'));
+        // Два балла и сразу ответ на экран: этим вопрос и заканчивается,
+        // поэтому открывать его отдельным нажатием в шапке уже незачем.
+        box.appendChild(this.button('+2', 'Ответ верный', function () {
+            Quiz.game.scoreAndToggleAnswer(participant.id, 2);
+        }, 'is-plus'));
 
         // «Снять» показывается только у того, кто держит буззер: снимать
         // больше не с кого, а кнопка в каждой строке путала бы её с оценкой.
