@@ -39,10 +39,27 @@ Quiz.buzzer = {
      * Текущее состояние кнопки. Заодно снимает `pending`, когда тот уже
      * не нужен, — иначе снимать его было бы неоткуда: успешный INSERT
      * узнаётся не по ответу, а по приезду строки через realtime.
+     *
+     * Порядок проверок существенный, и стоил одного залипания. Строка из
+     * базы авторитетнее локального флага, поэтому смотреть на неё надо
+     * ПЕРВОЙ: пока `pending` проверялся раньше и выходил досрочно, приезд
+     * строки его не снимал вовсе — только таймаут. А таймаут считается
+     * здесь же, то есть на перерисовке, а перерисовать состояние MINE
+     * нечем: интервал идёт только в WAIT. В итоге ведущий, оценивший
+     * ответ быстрее трёх секунд с нажатия, оставлял игрока в «ОТВЕЧАЙТЕ»
+     * насовсем — до перезагрузки страницы.
      */
     state: function () {
         var mine = Quiz.store.myParticipant();
         if (!Quiz.store.game || !mine) return this.IDLE;
+
+        var buzz = Quiz.store.buzz;
+        if (buzz) {
+            // Своё нажатие доехало обратно — предохранитель сделал своё
+            // дело и дальше только мешает.
+            this.pending = false;
+            return buzz.participant_id === mine.id ? this.MINE : this.TAKEN;
+        }
 
         if (this.pending) {
             if (Date.now() - this.pendingSince < this.PENDING_TIMEOUT_MS) {
@@ -51,11 +68,6 @@ Quiz.buzzer = {
             this.pending = false;
         }
 
-        var buzz = Quiz.store.buzz;
-        if (buzz) {
-            this.pending = false;
-            return buzz.participant_id === mine.id ? this.MINE : this.TAKEN;
-        }
         if (Quiz.timing.remainingFor(mine) > 0) return this.WAIT;
         return this.READY;
     },
@@ -71,6 +83,13 @@ Quiz.buzzer = {
         this.pending = true;
         this.pendingSince = Date.now();
         Quiz.ui.buzzer.render();
+
+        // Флаг живёт по часам, а состояние, которое он держит, ничем не
+        // перерисовывается: интервал идёт только в WAIT. Значит, его
+        // истечение надо разбудить самим — иначе таймаут ниже существует
+        // только на бумаге, и потерянное событие оставит кнопку висеть.
+        setTimeout(function () { Quiz.ui.buzzer.render(); },
+                   this.PENDING_TIMEOUT_MS + 50);
 
         try {
             await Quiz.db.insertBuzz(game.id, mine.id);
