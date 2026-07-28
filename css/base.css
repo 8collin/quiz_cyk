@@ -168,6 +168,11 @@ body {
 }
 .btn.is-on:hover { background-color: var(--accent-gold); }
 
+/* Правая группа шапки — строка в обеих ролях. Раньше это правило было
+   только у ведущего, и у игрока громкость с кнопкой «Выйти» вставали друг
+   под друга, вылезая за шапку высотой 50 px. */
+.header-actions { display: flex; align-items: center; gap: 12px; }
+
 .volume-control { display: flex; align-items: center; gap: 6px; }
 .volume-slider {
     -webkit-appearance: none;

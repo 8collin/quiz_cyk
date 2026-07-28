@@ -29,6 +29,8 @@
     max-width: 400px;
     height: calc(50px + env(safe-area-inset-top));
     padding-top: env(safe-area-inset-top);
+    padding-left: 12px;
+    padding-right: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,7 +38,35 @@
     background: transparent;
     z-index: 50;
 }
-.role-player .volume-slider { width: 90px; }
+/* На узком экране места на всё не хватает, и уступать первым должен
+   ползунок: он остаётся пригодным любой длины, а имя, ужатое до трёх
+   букв, не отвечает на вопрос «под кем я вошёл». До нижней границы
+   ползунок доходит только с очень длинным именем — дальше многоточие
+   получает уже оно. */
+/* Множитель заведомо больше любого разумного: сжатие flex распределяет
+   нехватку пропорционально, и при соседних 3 и 1 имя начинало резаться
+   раньше, чем ползунок доходил до своей нижней границы. */
+.role-player .volume-control { min-width: 0; flex-shrink: 100; }
+.role-player .volume-slider { width: 90px; min-width: 46px; }
+
+/* Под кем вошли. Места в шапке телефона мало и делить его не с чем,
+   поэтому длинное имя обрезается многоточием, а не выдавливает кнопку
+   «Выйти» за край экрана. */
+/* Без min-width группа не даёт себя ужать (у flex-элемента по умолчанию
+   min-width: auto), и длинное имя выдавливает «Выйти» за край экрана
+   вместо того, чтобы обрезаться самому. */
+.role-player .header-actions { min-width: 0; }
+
+.role-player .my-name {
+    min-width: 0;
+    flex: 0 1 auto;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /* Табло: закреплено сверху, высота ограничена, чтобы вопросу всегда
    оставалось место. */

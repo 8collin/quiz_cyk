@@ -55,6 +55,9 @@ Quiz.main = {
      */
     enterGame: async function (profile) {
         Quiz.dom.setRole(profile.role === 'admin' ? 'admin' : 'player');
+        // Имя пишем здесь, а не при отрисовке: это личность вошедшего, она
+        // не меняется по ходу игры и от состояния в store не зависит.
+        Quiz.dom.setText('my-name', profile.display_name);
         Quiz.ui.login.hide();
 
         try {
@@ -142,6 +145,8 @@ Quiz.main = {
         Quiz.ui.buzzer.stopTicking();
         Quiz.ui.players.stopTicking();
         Quiz.dom.setRole('unknown');
+        // Чужое имя не должно мелькнуть в шапке при следующем входе.
+        Quiz.dom.setText('my-name', '');
         Quiz.ui.login.show();
     },
 
