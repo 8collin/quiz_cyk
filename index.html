@@ -32,10 +32,6 @@
 
     <div id="screen-game" class="screen" hidden>
         <aside class="sidebar">
-            <!-- Единственное «добавить»: заводит вход, с которым человек
-                 сядет за свой телефон. В игру он попадёт сам. -->
-            <button class="btn-add-player admin-only" id="btn-add-account"
-                    title="Завести игроку вход: почта и пароль">+ Аккаунт</button>
             <div class="players-scroll" id="players-list"></div>
         </aside>
 
@@ -78,20 +74,23 @@
                     <button class="btn btn-circle" id="btn-prev" title="Предыдущий вопрос">◀</button>
                     <button class="btn btn-circle" id="btn-next" title="Следующий вопрос">▶</button>
                     <div class="status" id="status-text"></div>
-                    <!-- Правый край той же строки: отжимает её туда CSS
-                         (.nav-end), поэтому обёртка вокруг стрелок не
-                         нужна. Панель звуков от места кнопки не зависит —
-                         она открывается ниже, и старшинство панелей
-                         по-прежнему задаёт их порядок в этой разметке. -->
+                    <!-- Правый край той же строки: отжимает туда CSS
+                         (.nav-end на первой из двух), поэтому обёртка
+                         вокруг стрелок не нужна. Обе панели открываются
+                         ниже, и от места кнопок не зависят — старшинство
+                         панелей по-прежнему задаёт их порядок в этой
+                         разметке. -->
                     <button class="btn nav-end" id="btn-toggle-sounds" title="Звуки: файлы, громкость, кому что играет">Звуки</button>
+                    <button class="btn" id="btn-toggle-users" title="Аккаунты: завести, переименовать, сменить пароль">Пользователи</button>
                 </div>
             </header>
 
             <!-- Панель звуков — только ведущему и только на его
                  устройстве: флага в базе у неё нет, игроки о ней не
-                 знают. Стоит первой из трёх: правила в admin.css гасят
+                 знают. Стоит первой из четырёх: правила в admin.css гасят
                  всё, что НИЖЕ открытой панели, поэтому порядок здесь
-                 задаёт старшинство — звуки, статистика, вопрос. -->
+                 задаёт старшинство — звуки, пользователи, статистика,
+                 вопрос. -->
             <div class="sounds-view admin-only" id="sounds-view" hidden>
                 <div class="sounds-box">
                     <div class="sounds-head">
@@ -105,6 +104,24 @@
                         <div id="sounds-list"></div>
                         <div class="sounds-group">Кому что играет</div>
                         <div id="sounds-players"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель пользователей — как и звуки, только у ведущего и
+                 только на его устройстве. Имя в строке меняется, логин
+                 рядом с ним — нет: он зеркалит адрес из auth.users, и
+                 переименование его не задевает (sql/006_users.sql). -->
+            <div class="users-view admin-only" id="users-view" hidden>
+                <div class="sounds-box">
+                    <div class="sounds-head">
+                        <div class="stats-title">Пользователи</div>
+                        <button class="btn" id="btn-add-account"
+                                title="Завести игроку вход: имя и пароль">+ Аккаунт</button>
+                        <button class="btn" id="btn-users-close">Закрыть</button>
+                    </div>
+                    <div class="sounds-scroll">
+                        <div id="users-list"></div>
                     </div>
                 </div>
             </div>
@@ -194,6 +211,9 @@
     <script src="js/ui/buzzer.js"></script>
     <script src="js/ui/stats.js"></script>
     <script src="js/ui/sounds.js"></script>
+    <!-- После sounds.js: панель пользователей закрывает панель звуков,
+         когда открывается, и обращается к ней по имени. -->
+    <script src="js/ui/users.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

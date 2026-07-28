@@ -495,5 +495,61 @@ Quiz.db = {
                 .eq('status', 'running')
                 .neq('id', gameId)
         );
+    },
+
+    // --- Пользователи -----------------------------------------------------
+    //
+    // Строка profile — это человек: имя, логин и роль. Пароль и адрес живут
+    // в auth.users, куда клиенту хода нет вовсе: роли authenticated не
+    // разрешено даже читать эту таблицу. Поэтому всё, что панель делает с
+    // ними, идёт через функции из sql/006_users.sql — они проверяют
+    // is_admin() в своём теле, потому что security definer обходит RLS.
+
+    /** Все, у кого есть аккаунт. Профили разрешено читать любому вошедшему. */
+    getUsers: async function () {
+        return this.unwrap(
+            await this.client
+                .from('profile')
+                .select('id, display_name, login, role')
+                .order('display_name', { ascending: true })
+        );
+    },
+
+    /**
+     * Переименование.
+     *
+     * Копии в `participant` подтягивает триггер profile_name_sync_after_update,
+     * причём во всех играх сразу, поэтому второго запроса отсюда не идёт.
+     * Логин при этом не меняется — он в другой колонке и заморожен
+     * триггером guard_profile_role.
+     */
+    setUserName: async function (userId, name) {
+        return this.unwrap(
+            await this.client
+                .from('profile')
+                .update({ display_name: name })
+                .eq('id', userId)
+        );
+    },
+
+    /** Новый пароль игроку. Проверку длины делает и функция — там она злее. */
+    setUserPassword: async function (userId, password) {
+        return this.unwrap(
+            await this.client.rpc('admin_set_password', {
+                p_user_id:  userId,
+                p_password: String(password || '')
+            })
+        );
+    },
+
+    /**
+     * Аккаунт целиком. Строка participant его переживает: profile_id
+     * обнуляется, а счёт, имя и журнал остаются — статистика сыгранных игр
+     * не должна меняться задним числом. См. sql/006_users.sql.
+     */
+    deleteUser: async function (userId) {
+        return this.unwrap(
+            await this.client.rpc('admin_delete_user', { p_user_id: userId })
+        );
     }
 };

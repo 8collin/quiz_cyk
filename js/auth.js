@@ -22,6 +22,8 @@ Quiz.auth = {
     FAIL_NO_PROFILE:  'no_profile',
     FAIL_TAKEN:       'taken',
     FAIL_WEAK:        'weak',
+    /** Аккаунт заведён, но пароль на нём остался временным. */
+    FAIL_PASSWORD_LEFT: 'password_left',
     FAIL_UNKNOWN:     'unknown',
 
     /**
@@ -185,9 +187,46 @@ Quiz.auth = {
         return clean.indexOf('@') >= 0 ? clean : this.loginFor(clean);
     },
 
-    /** Пароль, который не стыдно продиктовать через комнату. Шесть — минимум Supabase. */
+    /** Пароль, который не стыдно продиктовать через комнату. */
     suggestPassword: function () {
         return String(Math.floor(100000 + Math.random() * 900000));
+    },
+
+    /**
+     * Наш минимум длины пароля. Ровно «чтобы он был»: пароль здесь
+     * диктуют вслух через комнату, а от кого его беречь — вопрос без
+     * ответа. Пустое поле всё же не пропускаем: это не короткий пароль,
+     * а промах мимо кнопки. Продублирован в admin_set_password, который
+     * и есть настоящая проверка.
+     */
+    PASSWORD_MIN: 2,
+
+    /**
+     * Минимум, который принимает регистрация, — а это не одно и то же.
+     *
+     * `signUp` идёт через GoTrue, и тот отвергает всё короче своей
+     * настройки («Password should be at least 6 characters»); настройка
+     * живёт в проекте Supabase, а не в этом коде, и снять её отсюда
+     * нельзя. Поэтому короткий пароль ставится вторым шагом — см.
+     * createAccount.
+     */
+    SIGNUP_PASSWORD_MIN: 6,
+
+    /**
+     * Временный пароль, под которым аккаунт заводится, когда нужный
+     * короче минимума регистрации. Живёт секунду и никому не показывается.
+     *
+     * Длина берётся с запасом от SIGNUP_PASSWORD_MIN, а не равна ему.
+     * Ровно на границе это работало бы до первого дня, когда Supabase
+     * поднимет свой минимум, — и тогда перестали бы заводиться ВСЕ
+     * аккаунты, а не только с короткими паролями. Запас эту связь рвёт.
+     */
+    temporaryPassword: function () {
+        var out = '';
+        while (out.length < this.SIGNUP_PASSWORD_MIN * 2) {
+            out += this.suggestPassword();
+        }
+        return out;
     },
 
     /**
@@ -198,19 +237,51 @@ Quiz.auth = {
      * handle_new_user и кладёт в profile.display_name. Отдельного шага
      * «переименовать после регистрации» больше нет.
      *
+     * А вот у пароля шаг второй появился, и вот зачем. Короткий пароль
+     * GoTrue не принимает вовсе (см. SIGNUP_PASSWORD_MIN), поэтому аккаунт
+     * заводится заведомо длинным временным, а нужный ставится следом
+     * через admin_set_password — она пишет хеш мимо GoTrue, и граница у
+     * неё наша. Пароль подлиннее проходит первым шагом, как и раньше, без
+     * второго запроса.
+     *
+     * Если второй шаг не пройдёт, аккаунт останется заведённым с
+     * временным паролем, которого никто не видел. Поэтому отказ отдаётся
+     * отдельной причиной: ведущему надо сказать не «не получилось», а
+     * «задайте пароль кнопкой в строке» — строка-то уже есть.
+     *
      * Участником игры новый игрок станет сам, когда войдёт: `join_game`
      * зовётся при каждом старте. Ведущему делать для этого ничего не надо.
      */
     createAccount: async function (name, password) {
         var clean = String(name || '').trim();
+        var wanted = String(password || '');
+
+        if (wanted.length < this.PASSWORD_MIN) {
+            throw this.fail(this.FAIL_WEAK);
+        }
+
+        var short = wanted.length < this.SIGNUP_PASSWORD_MIN;
         var result = await Quiz.db.getSignupClient().auth.signUp({
             email: this.loginFor(clean),
-            password: String(password || ''),
+            password: short ? this.temporaryPassword() : wanted,
             options: { data: { display_name: clean } }
         });
 
         if (result.error) {
             throw this.fail(this.classify(result.error), result.error.message);
+        }
+
+        if (short) {
+            // Без id второй шаг сделать нечем, а аккаунт уже заведён — это
+            // тот же случай, что и упавший запрос, и говорить о нём надо
+            // то же самое.
+            var user = result.data && result.data.user;
+            try {
+                if (!user || !user.id) throw new Error('регистрация не вернула пользователя');
+                await Quiz.db.setUserPassword(user.id, wanted);
+            } catch (err) {
+                throw this.fail(this.FAIL_PASSWORD_LEFT, err.message);
+            }
         }
         return { name: clean, address: this.loginFor(clean) };
     },

@@ -30,6 +30,7 @@ Quiz.main = {
         // Настоящая подпись придёт из render() в конце загрузки, когда
         // будет чем ответить на вопрос, есть кулдаун или нет.
         Quiz.ui.buzzer.render();
+        Quiz.ui.users.bind();
         Quiz.ui.admin.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
@@ -63,8 +64,10 @@ Quiz.main = {
      */
     enterGame: async function (profile) {
         Quiz.dom.setRole(profile.role === 'admin' ? 'admin' : 'player');
-        // Имя пишем здесь, а не при отрисовке: это личность вошедшего, она
-        // не меняется по ходу игры и от состояния в store не зависит.
+        // Имя из профиля — только чтобы уголок не пустовал, пока грузится
+        // игра. Дальше его ведёт отрисовка списка: ведущий может
+        // переименовать человека посреди раунда, и в углу должно оказаться
+        // то же имя, что на табло.
         Quiz.dom.setText('my-name', profile.display_name);
         Quiz.ui.login.hide();
 
@@ -154,6 +157,7 @@ Quiz.main = {
         Quiz.ui.buzzer.render();
         Quiz.ui.stats.render();
         Quiz.ui.sounds.render();
+        Quiz.ui.users.render();
         Quiz.ui.admin.render();
     },
 

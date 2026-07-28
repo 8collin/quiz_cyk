@@ -52,6 +52,13 @@ Quiz.ui.sounds = {
 
     toggle: function () {
         this.open = !this.open;
+        // Эта панель стоит в разметке выше панели пользователей и накрыла
+        // бы её (старшинство задаёт порядок, см. admin.css). Открытая
+        // «под» ничего не показывает, поэтому закрываем её сами.
+        if (this.open && Quiz.ui.users.open) {
+            Quiz.ui.users.open = false;
+            Quiz.ui.users.render();
+        }
         this.render();
     },
 

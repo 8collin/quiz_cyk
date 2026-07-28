@@ -28,6 +28,16 @@ Quiz.ui.players = {
             list.appendChild(self.card(participant));
         });
 
+        // Уголок «под кем вошли» — из своей же строки на табло, а не из
+        // профиля: переименование ведущего доезжает подпиской на
+        // participant, и без этой строки игрок остался бы со старым именем
+        // в шапке до перезагрузки. Пока строки нет (ведущий, первая
+        // отрисовка) — то, что поставил main.enterGame.
+        var mine = Quiz.store.myParticipant();
+        if (mine) {
+            Quiz.dom.setText('my-name', mine.display_name);
+        }
+
         // Ожидание идёт по оси T и меняется само по себе, без единого
         // события. Гоняет цифры отдельный тик — см. startTicking.
         if (Quiz.store.isAdmin() && rows.length) {

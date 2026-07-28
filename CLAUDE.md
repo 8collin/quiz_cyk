@@ -122,6 +122,19 @@ only while it is the current question and `show_answer` is set.
 **`security definer` functions bypass RLS**, so any of them that a client
 can call must check `is_admin()` in its own body.
 
+**Two functions write straight into `auth.users`** — `admin_set_password`
+and `admin_delete_user` in `sql/006_users.sql`. That is not a supported
+Supabase path; it exists because changing another person's password needs
+the `service_role` key, which this repository may not hold. Keep the list
+at two, and read the header there before adding a third.
+
+**A person's name and their login are different columns.**
+`profile.display_name` is free to change and is mirrored into
+`participant` by a trigger; `profile.login` mirrors `auth.users.email`,
+is what they type to sign in, and is frozen by `guard_profile_role`. The
+address is derived from the name only once, at signup — after the first
+rename the two no longer agree, which is why the panel shows both.
+
 **A Storage object name is not a free-form string.** The `sounds` bucket
 rejects anything outside a narrow ASCII set, and the keys this game uses
 are player names — `Алина.mp3` comes back as `Invalid key`. Paths are

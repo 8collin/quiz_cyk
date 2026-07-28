@@ -21,14 +21,6 @@ Quiz.ui.admin = {
         unknown: 'Не удалось загрузить вопросы'
     },
 
-    /** Тексты отказов при заведении аккаунта. */
-    ACCOUNT_MESSAGES: {
-        taken:   'Игрок с таким именем уже есть. Имя — это и есть вход, поэтому второму нужна фамилия или цифра.',
-        weak:    'Пароль короче шести знаков — Supabase такой не примет.',
-        network: 'Не получилось связаться с сервером. Проверьте подключение.',
-        unknown: 'Не удалось завести аккаунт'
-    },
-
     /** Из чего собран текущий список игр — чтобы не пересобирать зря. */
     gamesSignature: null,
 
@@ -38,10 +30,6 @@ Quiz.ui.admin = {
         Quiz.dom.on('btn-toggle-stats', 'click', function () { Quiz.game.toggleStats(); });
         Quiz.dom.on('btn-reset-penalties', 'click', function () { Quiz.game.clearPenalties(); });
         Quiz.dom.on('btn-intro', 'click', function () { Quiz.game.playIntro(); });
-
-        Quiz.dom.on('btn-add-account', 'click', function () {
-            Quiz.ui.admin.createAccount();
-        });
 
         Quiz.dom.on('btn-new-game', 'click', function () {
             var title = window.prompt('Название новой игры:');
@@ -71,46 +59,6 @@ Quiz.ui.admin = {
                 Quiz.game.makeActive(id);
             }
         });
-    },
-
-    /**
-     * Аккаунт игроку — имя и пароль, как в предыдущей версии.
-     *
-     * Адрес здесь не спрашивается и не показывается: он собирается из имени
-     * и остаётся внутренним делом Supabase. В консоль он всё же уходит —
-     * это единственный след на случай, когда вход по имени однажды не
-     * сойдётся и надо будет посмотреть, что за адрес получился.
-     *
-     * Пароль предлагается шестизначный и его можно переписать: диктовать
-     * через комнату проще число, но выбор за ведущим. Дальше пароль живёт
-     * только в этих двух диалогах — в игру он не попадает и никуда не
-     * сохраняется, проверять его будет Supabase, а не мы.
-     */
-    createAccount: async function () {
-        var name = (window.prompt('Имя игрока — оно же вход:') || '').trim();
-        if (!name) return;
-
-        var password = window.prompt(
-            'Пароль для «' + name + '»:',
-            Quiz.auth.suggestPassword()
-        );
-        if (!password) return;
-
-        try {
-            var account = await Quiz.auth.createAccount(name, password);
-            console.log('Аккаунт заведён:', account.name, '→', account.address);
-            window.alert(
-                'Аккаунт готов — продиктуйте игроку:\n\n' +
-                'Имя:    ' + name + '\n' +
-                'Пароль: ' + password + '\n\n' +
-                'В игру он попадёт сам, как только войдёт.'
-            );
-        } catch (err) {
-            window.alert(this.ACCOUNT_MESSAGES[err.reason] || this.ACCOUNT_MESSAGES.unknown);
-            // warn, а не error: разобранный отказ, показанный человеку, —
-            // это не сбой приложения. Так же поступают вход и импорт.
-            console.warn('Аккаунт не заведён:', err.reason, err.message);
-        }
     },
 
     /**

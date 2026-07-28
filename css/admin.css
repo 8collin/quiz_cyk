@@ -42,20 +42,6 @@
 .role-admin .question-text { font-size: 2.2rem; margin-bottom: 25px; }
 .role-admin .media { max-height: 40vh; }
 
-.btn-add-player {
-    width: 100%;
-    background: rgba(14, 165, 233, 0.1);
-    color: var(--accent-blue);
-    border: 2px dashed rgba(14, 165, 233, 0.4);
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: var(--radius-md);
-    font-family: inherit;
-    font-weight: 800;
-    text-transform: uppercase;
-    cursor: pointer;
-}
-
 /* Выбор активной игры.
    Это поле, а не кнопка. Раньше список нёс класс .btn и глушил системную
    стрелку через appearance:none — в ряду одинаковых кнопок он от них
@@ -143,19 +129,26 @@
    вопрос, — и там об этом сказано. Собственный `hidden` каждой панели
    остаётся единственным, что решает, кто на экране. */
 .role-admin .stats-view,
-.role-admin .sounds-view {
+.role-admin .sounds-view,
+.role-admin .users-view {
     flex-grow: 1;
     min-height: 0;
     align-items: flex-start;
     padding: 30px;
 }
+/* Пар получается тем больше, чем больше панелей: каждая гасит все, что
+   ниже. С четырьмя это ещё читается, с пятой стоит завести общий класс. */
+.role-admin .sounds-view:not([hidden]) ~ .users-view,
 .role-admin .sounds-view:not([hidden]) ~ .stats-view,
 .role-admin .sounds-view:not([hidden]) ~ .question-area,
+.role-admin .users-view:not([hidden])  ~ .stats-view,
+.role-admin .users-view:not([hidden])  ~ .question-area,
 .role-admin .stats-view:not([hidden])  ~ .question-area { display: none; }
 
 /* Панель звуков. Ширина больше, чем у статистики: в строке ползунок,
    и на узкой колонке ему не остаётся хода. */
-.sounds-view { display: flex; justify-content: center; }
+.sounds-view,
+.users-view { display: flex; justify-content: center; }
 .sounds-box {
     background: var(--bg-panel);
     border: var(--border-subtle);
@@ -226,6 +219,43 @@
 }
 .sound-row .btn-mini { flex: 0 0 auto; padding: 5px 12px; }
 .sound-note { color: var(--text-muted); padding: 8px 0; }
+
+/* Строка пользователя. Рамка и ритм те же, что у звука, — панели
+   соседние и обязаны выглядеть одинаково; своё здесь только деление на
+   имя и логин. */
+.user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+}
+.user-row + .user-row { border-top: var(--border-subtle); }
+.user-row .btn-mini { flex: 0 0 auto; padding: 5px 12px; }
+
+/* Имя забирает свободное место, логин стоит по содержимому: имя длиннее
+   и меняется, а адрес короткий и постоянный. */
+.user-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* Приглушён намеренно: это не вторая строка данных, а подпись «чем он
+   входит». Одним начертанием с именем читалось бы как два имени. */
+.user-login {
+    flex: 0 1 auto;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* Ведущий — та же строка, только имя отмечено цветом: удалить его нельзя,
+   и это единственная строка без «✕». */
+.user-row.is-host .user-name { color: var(--accent-gold); }
 
 /* Панель ответа — только у ведущего, видна всегда, когда игра загружена. */
 .answer-preview {
