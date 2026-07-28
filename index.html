@@ -84,8 +84,12 @@
                 </div>
             </section>
 
+            <!-- Кнопка объявлена заблокированной: до первой отрисовки про
+                 кулдаун ничего не известно, а разрешать нажатие раньше,
+                 чем узнали, нельзя. Подпись и доступность дальше ведёт
+                 js/ui/buzzer.js, здесь только состояние покоя. -->
             <div class="action-area player-only">
-                <button class="btn-buzzer" id="btn-buzzer">ЕСТЬ ОТВЕТ!</button>
+                <button class="btn-buzzer" id="btn-buzzer" disabled>ОЖИДАНИЕ</button>
             </div>
         </main>
     </div>

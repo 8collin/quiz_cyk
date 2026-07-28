@@ -22,6 +22,13 @@ Quiz.main = {
 
         this.bindVolume();
         Quiz.ui.buzzer.bind();
+        // Сразу, на пустом store: получится «ОЖИДАНИЕ», заблокировано. Роль
+        // на <body> встаёт в enterGame раньше, чем доедет состояние игры, и
+        // без этой строки телефон после F5 успевает показать доступную
+        // «ЕСТЬ ОТВЕТ!» — секунду, но игроку, у которого идёт кулдаун.
+        // Настоящая подпись придёт из render() в конце загрузки, когда
+        // будет чем ответить на вопрос, есть кулдаун или нет.
+        Quiz.ui.buzzer.render();
         Quiz.ui.admin.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
