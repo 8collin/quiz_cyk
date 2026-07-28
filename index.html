@@ -33,6 +33,8 @@
         <main class="main-content">
             <header class="top-bar">
                 <div class="admin-controls admin-only">
+                    <select class="btn select-game" id="select-game" title="Активная игра"></select>
+                    <button class="btn" id="btn-new-game" title="Создать игру">+ Игра</button>
                     <input type="file" id="input-xlsx" accept=".xlsx,.xls" hidden>
                     <label for="input-xlsx" class="btn">Загрузить</label>
                     <button class="btn btn-circle" id="btn-prev" title="Предыдущий вопрос">◀</button>
@@ -101,6 +103,7 @@
     <script src="js/buzzer.js"></script>
     <script src="js/realtime.js"></script>
     <script src="js/ui/login.js"></script>
+    <script src="js/ui/admin.js"></script>
     <script src="js/ui/players.js"></script>
     <script src="js/ui/question.js"></script>
     <script src="js/ui/buzzer.js"></script>

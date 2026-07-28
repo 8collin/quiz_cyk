@@ -175,7 +175,7 @@ revoke execute on function public.freeze_thinking(uuid)        from public, anon
 revoke execute on function public.resume_thinking(uuid)        from public, anon, authenticated;
 revoke execute on function public.buzz_guard()                 from public, anon, authenticated;
 revoke execute on function public.buzz_freeze_axis()           from public, anon, authenticated;
-revoke execute on function public.answer_applies_penalty()     from public, anon, authenticated;
+revoke execute on function public.answer_applies_effects()     from public, anon, authenticated;
 revoke execute on function public.handle_new_user()            from public, anon, authenticated;
 revoke execute on function public.guard_profile_role()         from public, anon, authenticated;
 

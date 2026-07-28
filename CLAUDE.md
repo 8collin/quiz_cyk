@@ -13,8 +13,9 @@ This is a from-scratch rewrite. The previous version was a single
 1300-line `cyk.html` in `damenweb/quiz`, kept only as a reference for game
 mechanics. Do not copy its structure; do consult it when a rule is unclear.
 
-Current state: skeleton. Schema, layout and foundation modules exist; game
-logic is stubbed and marked `TODO(скелет)`. See `TODO.md`.
+Current state: playable. Schema, login, realtime, the buzzer and the host
+panel are done and verified on live sessions; only the Excel import
+(`js/excel.js`) is still stubbed. See `TODO.md`.
 
 ## Hard constraints — do not violate these
 

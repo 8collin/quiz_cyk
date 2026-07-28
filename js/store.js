@@ -15,6 +15,9 @@ Quiz.store = {
     /** Строка game. */
     game: null,
 
+    /** Игры ведущего для выбора активной. У игрока всегда пусто. */
+    games: [],
+
     /** Строки question текущей игры, по порядку. */
     questions: [],
 
@@ -70,6 +73,7 @@ Quiz.store = {
 
     reset: function () {
         this.game = null;
+        this.games = [];
         this.questions = [];
         this.participants = [];
         this.buzz = null;

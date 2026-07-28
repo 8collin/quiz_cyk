@@ -244,10 +244,16 @@ create trigger buzz_freeze_axis_after
     execute function public.buzz_freeze_axis();
 
 -- ---------------------------------------------------------------------
--- Триггер: принятый ответ стоит игроку одного шага штрафа, отсчитанного
--- от текущего положения оси.
+-- Триггер: у принятого ответа два следствия — он меняет счёт на delta и
+-- стоит игроку одного шага штрафа, отсчитанного от текущего положения оси.
+--
+-- Счёт начисляется здесь, а не с клиента, по двум причинам. PostgREST не
+-- умеет `score = score + delta` — клиенту пришлось бы слать сумму,
+-- посчитанную от закешированного значения, и терять чужую правку. И
+-- главное: правила игры живут в базе, иначе ведущий с открытой консолью
+-- ничем не отличается от игрока с открытой консолью.
 -- ---------------------------------------------------------------------
-create or replace function public.answer_applies_penalty()
+create or replace function public.answer_applies_effects()
 returns trigger
 language plpgsql
 security definer
@@ -261,17 +267,18 @@ begin
      where id = new.game_id;
 
     update public.participant
-       set penalty_until_ms = public.think_now(new.game_id) + coalesce(v_step, 0)
+       set score            = score + new.delta,
+           penalty_until_ms = public.think_now(new.game_id) + coalesce(v_step, 0)
      where id = new.participant_id;
 
     return null;
 end;
 $$;
 
-create trigger answer_applies_penalty_after_insert
+create trigger answer_applies_effects_after_insert
     after insert on public.answer_log
     for each row
-    execute function public.answer_applies_penalty();
+    execute function public.answer_applies_effects();
 
 -- ---------------------------------------------------------------------
 -- Вход игрока в игру.

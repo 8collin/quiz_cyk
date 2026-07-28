@@ -4,9 +4,12 @@
  *
  * Сделано на этапе 1: вход, восстановление сессии, выход, роль на <body>,
  * громкость. На этапе 2: первичная загрузка состояния, подписки realtime
- * и отрисовка. Буззер и панель ведущего — этапы 3 и 4.
+ * и отрисовка. На этапе 3 — буззер, на этапе 4 — панель ведущего.
  */
 Quiz.main = {
+    /** Идёт ли загрузка прямо сейчас; см. loadGame. */
+    loading: false,
+
     start: async function () {
         try {
             Quiz.db.init();
@@ -19,8 +22,14 @@ Quiz.main = {
 
         this.bindVolume();
         Quiz.ui.buzzer.bind();
+        Quiz.ui.admin.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
+
+        // Смена активной игры — единственное, чего подписка не переживает:
+        // она привязана к id. Оба пути ведут в одну и ту же loadGame.
+        Quiz.realtime.onGameClosed = function () { Quiz.main.loadGame(); };
+        Quiz.game.reload = function () { return Quiz.main.loadGame(); };
 
         // Токен может истечь или сессию закроют из другой вкладки.
         Quiz.auth.onSignedOut(function () { Quiz.main.showLogin(); });
@@ -69,9 +78,34 @@ Quiz.main = {
      * расходятся такие пары всегда молча.
      */
     loadGame: async function () {
+        // Загрузку умеют начать двое: ведущий, переключивший игру, и
+        // подписка, увидевшая, что игра сменила статус. Оба узнают об
+        // одном и том же событии, поэтому второму делать нечего — он всё
+        // равно прочитал бы ровно то, что читает первый.
+        if (this.loading) return;
+        this.loading = true;
+        try {
+            await this.loadGameOnce();
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    loadGameOnce: async function () {
         var game = await Quiz.db.getActiveGame();
+
+        // Идущей может оказаться уже другая игра, поэтому сначала убираем
+        // всё, что осталось от прошлой, и только потом раскладываем новое.
+        // На первой загрузке обе строчки ничего не делают.
+        Quiz.realtime.unsubscribe();
+        Quiz.store.reset();
+
         Quiz.store.game = game;
         Quiz.timing.applyGameRow(game);
+
+        if (Quiz.store.isAdmin()) {
+            Quiz.store.games = await Quiz.db.getMyGames(Quiz.store.profile.id);
+        }
 
         if (!game) {
             console.log('Игр со статусом running нет — показывать нечего.');
@@ -85,7 +119,6 @@ Quiz.main = {
             await Quiz.db.joinGame(game.id);
         }
 
-        Quiz.store.questions = await Quiz.db.getQuestions(game.id);
         await Quiz.realtime.reloadQuestionScoped();
 
         Quiz.realtime.onChange = function () { Quiz.main.render(); };
@@ -98,12 +131,14 @@ Quiz.main = {
         Quiz.ui.question.render();
         Quiz.ui.players.render();
         Quiz.ui.buzzer.render();
+        Quiz.ui.admin.render();
     },
 
     showLogin: function () {
         Quiz.realtime.unsubscribe();
-        // Иначе интервал отсчёта переживёт выход и продолжит тикать.
+        // Иначе интервалы отсчёта переживут выход и продолжат тикать.
         Quiz.ui.buzzer.stopTicking();
+        Quiz.ui.players.stopTicking();
         Quiz.dom.setRole('unknown');
         Quiz.ui.login.show();
     },

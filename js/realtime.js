@@ -18,6 +18,15 @@ Quiz.realtime = {
     /** Ставится из main.js: чем перерисовывать после каждого изменения. */
     onChange: function () {},
 
+    /**
+     * Ставится из main.js: что делать, когда игра перестала быть идущей.
+     *
+     * Подписка привязана к одному id, так что о переезде на другую игру
+     * узнать больше неоткуда. Ведущий переключает игру у себя — все
+     * остальные видят только то, что их игра сменила статус.
+     */
+    onGameClosed: function () {},
+
     subscribe: function (gameId) {
         var self = this;
         var forThisGame = 'game_id=eq.' + gameId;
@@ -68,6 +77,13 @@ Quiz.realtime = {
 
         Quiz.store.game = next;
         Quiz.timing.applyGameRow(next);
+
+        // Игру закрыли или отложили — значит, идущая теперь другая, и
+        // перечитывать надо не части, а всё вместе с подпиской.
+        if (next.status !== 'running') {
+            this.onGameClosed();
+            return;
+        }
 
         var questionChanged = !previous ||
             previous.current_question_id !== next.current_question_id;
@@ -128,6 +144,13 @@ Quiz.realtime = {
     reloadQuestionScoped: async function () {
         var game = Quiz.store.game;
         if (!game) return;
+
+        // Сам список вопросов сюда попал по необходимости: таблица
+        // `question` в публикацию realtime не входит, поэтому импорт из
+        // Excel и «Сброс игры» приезжают на чужие экраны только с этой
+        // перечиткой. Момент подходящий — указатель на вопрос всё равно
+        // меняется тогда же.
+        Quiz.store.questions = await Quiz.db.getQuestions(game.id);
 
         Quiz.store.buzz = await Quiz.db.getCurrentBuzz(game.id);
         Quiz.store.participants = await Quiz.db.getParticipants(game.id);

@@ -125,6 +125,21 @@ body {
 .players-scroll::-webkit-scrollbar { width: 6px; }
 .players-scroll::-webkit-scrollbar-thumb { background: var(--bg-raised); border-radius: 10px; }
 
+/* Правый край карточки. У игрока в нём только счёт, поэтому его строка
+   выглядит так же, как и без бейджей ведущего. */
+.player-meta { display: flex; align-items: center; gap: 8px; }
+
+.badge {
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+    /* Цифра меняется пять раз в секунду; без этого карточку дёргает. */
+    font-variant-numeric: tabular-nums;
+}
+.badge-wait  { background: rgba(245, 158, 11, 0.15); color: var(--accent-gold); }
+.badge-tries { background: rgba(148, 163, 184, 0.15); color: var(--text-muted); }
+
 .btn {
     background-color: var(--bg-card);
     color: var(--text-main);
@@ -141,7 +156,17 @@ body {
     transition: background 0.2s;
 }
 .btn:hover { background-color: var(--bg-raised); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn:disabled:hover { background-color: var(--bg-card); }
 .btn-circle { width: 42px; height: 42px; padding: 0; border-radius: 50%; }
+
+/* Нажатое состояние кнопки — сейчас только «Ответ» показан. */
+.btn.is-on {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--bg-base);
+}
+.btn.is-on:hover { background-color: var(--accent-gold); }
 
 .volume-control { display: flex; align-items: center; gap: 6px; }
 .volume-slider {

@@ -160,11 +160,165 @@ Quiz.db = {
                 .eq('question_id', questionId)
                 .maybeSingle()
         );
+    },
+
+    // --- Записи ведущего -------------------------------------------------
+    //
+    // Всё, что ниже, доступно только ведущему: политики `*_admin_all`
+    // отвергнут эти запросы у игрока, а интерфейс до них и не доберётся.
+    // Помните, что отвергнутый политикой UPDATE не бросает ошибку — он
+    // молча меняет ноль строк.
+
+    /**
+     * Указатель на текущий вопрос.
+     *
+     * Показ ответа снимается той же записью: он относится к конкретному
+     * вопросу, и оставить его включённым при переходе значило бы открыть
+     * игрокам следующий ответ до того, как они увидят вопрос.
+     */
+    setCurrentQuestion: async function (gameId, questionId) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .update({ current_question_id: questionId, show_answer: false })
+                .eq('id', gameId)
+        );
+    },
+
+    setShowAnswer: async function (gameId, value) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .update({ show_answer: !!value })
+                .eq('id', gameId)
+        );
+    },
+
+    /** Сброс оси, личных кулдаунов и слота отвечающего — одной функцией. */
+    resetThinking: async function (gameId) {
+        return this.unwrap(
+            await this.client.rpc('reset_thinking', { p_game_id: gameId })
+        );
+    },
+
+    /** Отмена одного случайного нажатия: шаг штрафа назад плюс слот. */
+    reducePenalty: async function (participantId) {
+        return this.unwrap(
+            await this.client.rpc('reduce_penalty', { p_participant_id: participantId })
+        );
+    },
+
+    /**
+     * Оценка ведущего. Счёт и штраф начисляет триггер
+     * answer_applies_effects — здесь только факт ответа.
+     */
+    insertAnswer: async function (gameId, questionId, participantId, delta) {
+        return this.unwrap(
+            await this.client
+                .from('answer_log')
+                .insert({
+                    game_id: gameId,
+                    question_id: questionId,
+                    participant_id: participantId,
+                    delta: delta
+                })
+        );
+    },
+
+    /** Освобождение слота. Строка в игре одна, поэтому фильтр по игре. */
+    deleteBuzz: async function (gameId) {
+        return this.unwrap(
+            await this.client.from('buzz').delete().eq('game_id', gameId)
+        );
+    },
+
+    /** Игрок без аккаунта: profile_id остаётся null, счёт ведёт ведущий. */
+    addParticipant: async function (gameId, displayName) {
+        return this.unwrap(
+            await this.client
+                .from('participant')
+                .insert({ game_id: gameId, display_name: displayName })
+        );
+    },
+
+    deleteParticipant: async function (participantId) {
+        return this.unwrap(
+            await this.client.from('participant').delete().eq('id', participantId)
+        );
+    },
+
+    /** Счёт в ноль. Кулдауны обнуляет reset_thinking, здесь их не трогаем. */
+    resetScores: async function (gameId) {
+        return this.unwrap(
+            await this.client
+                .from('participant')
+                .update({ score: 0 })
+                .eq('game_id', gameId)
+        );
+    },
+
+    /**
+     * Стирает вопросы игры.
+     *
+     * Каскадами уходит и всё, что на них ссылается: ответы
+     * (question_answer) и журнал (answer_log). Указатель
+     * game.current_question_id обнуляется сам — внешний ключ объявлен
+     * `on delete set null`.
+     */
+    deleteQuestions: async function (gameId) {
+        return this.unwrap(
+            await this.client.from('question').delete().eq('game_id', gameId)
+        );
+    },
+
+    // --- Игры ------------------------------------------------------------
+
+    /** Игры этого ведущего, свежие сверху — для выбора активной. */
+    getMyGames: async function (hostId) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .select('id, title, status, created_at')
+                .eq('host_id', hostId)
+                .order('created_at', { ascending: false })
+        );
+    },
+
+    /** Новая игра сразу идущая: заводят её, чтобы играть, а не отложить. */
+    createGame: async function (title, hostId) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .insert({ title: title, host_id: hostId, status: 'running' })
+                .select('*')
+                .maybeSingle()
+        );
+    },
+
+    setGameStatus: async function (gameId, status) {
+        return this.unwrap(
+            await this.client.from('game').update({ status: status }).eq('id', gameId)
+        );
+    },
+
+    /**
+     * Снимает `running` со всех остальных игр ведущего.
+     *
+     * Идущая игра обязана быть одна: именно по ней getActiveGame() находит
+     * игру для игроков, и второй running сделал бы выбор случайным.
+     */
+    demoteOtherGames: async function (gameId, hostId) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .update({ status: 'lobby' })
+                .eq('host_id', hostId)
+                .eq('status', 'running')
+                .neq('id', gameId)
+        );
     }
 
-    // --- Запросы добавляются сюда по мере готовности функций. Планируемый набор:
+    // --- Ещё не написано:
     //
     //   replaceQuestions(gameId, qs)  -> стереть и залить заново из Excel
-    //   setCurrentQuestion(...)       -> навигация ведущего
-    //   insertBuzz(gameId, partId)    -> атомарный захват слота, см. js/buzzer.js
 };
