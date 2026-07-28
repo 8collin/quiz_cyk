@@ -131,8 +131,19 @@
 }
 .role-player .media { width: 100%; max-width: 100%; border-width: 2px; margin-bottom: 10px; }
 
-/* Та же панель, что у ведущего, но его отступы съели бы весь экран. */
-.role-player .answer-preview { margin-top: 12px; padding: 14px; }
+/* Та же панель, что у ведущего, но его отступы съели бы весь экран.
+
+   И стоит она у игрока ПЕРЕД вопросом. Область вопроса на телефоне
+   прокручивается, вопросы длинные, поэтому открытый ответ оказывался за
+   нижним краем — игрок узнавал о нём, только долистав. Порядок задаётся
+   через order, а не перестановкой в разметке: разметка одна на обе роли,
+   а у ведущего на широком экране ответ уместен там же, где и был. */
+.role-player .answer-preview {
+    order: -1;
+    margin-top: 0;
+    margin-bottom: 12px;
+    padding: 14px;
+}
 .role-player .answer-preview-title { margin-bottom: 8px; font-size: 0.8rem; }
 .role-player .answer-text { font-size: 1.15rem; margin-bottom: 0; }
 .role-player .answer-preview .media { margin: 10px 0 0; }
