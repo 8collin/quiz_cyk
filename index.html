@@ -47,6 +47,7 @@
                     <input type="file" id="input-xlsx" accept=".xlsx,.xls" hidden>
                     <label for="input-xlsx" class="btn">Загрузить</label>
                     <button class="btn" id="btn-toggle-answer">Ответ</button>
+                    <button class="btn" id="btn-toggle-stats">Показать статистику</button>
                     <button class="btn" id="btn-reset-penalties" title="Обнулить ожидание у всех">Сброс ⏱</button>
                     <button class="btn" id="btn-restart">Сброс игры</button>
                     <button class="btn btn-circle" id="btn-intro" title="Проиграть интро">🎵</button>
@@ -92,6 +93,32 @@
                 <button class="btn-buzzer" id="btn-buzzer" disabled>ОЖИДАНИЕ</button>
             </div>
         </main>
+
+        <!-- Слой статистики. Одна разметка на обе роли и без классов
+             роли: показан он или нет, решает флаг show_stats в строке
+             game, и записать это правило вторым местом в разметке
+             значило бы дать ему разъехаться. Шапка таблицы статична,
+             строки собирает js/ui/stats.js. -->
+        <div class="stats-overlay" id="stats-overlay" hidden>
+            <div class="stats-box">
+                <div class="stats-title">Статистика игры</div>
+                <div class="stats-scroll">
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th class="stats-name">Игрок</th>
+                                <th>−1</th>
+                                <th>0</th>
+                                <th>+1</th>
+                                <th>+2</th>
+                                <th class="stats-score">Очки</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stats-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ================================================================
@@ -125,6 +152,7 @@
     <script src="js/ui/players.js"></script>
     <script src="js/ui/question.js"></script>
     <script src="js/ui/buzzer.js"></script>
+    <script src="js/ui/stats.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

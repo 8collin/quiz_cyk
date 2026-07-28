@@ -72,6 +72,20 @@ Quiz.game = {
         return Quiz.db.setShowAnswer(game.id, !game.show_answer);
     },
 
+    /**
+     * Показать или спрятать таблицу статистики.
+     *
+     * Устроено как показ ответа и по той же причине: флаг лежит в строке
+     * game, а её изменение realtime разносит по всем экранам. Поэтому
+     * таблица открывается у ведущего и игроков одновременно, а кнопка
+     * есть только у ведущего — момент показа его.
+     */
+    toggleStats: function () {
+        var game = Quiz.store.game;
+        if (!game) return Promise.resolve();
+        return Quiz.db.setShowStats(game.id, !game.show_stats);
+    },
+
     // --- Оценка -----------------------------------------------------------
 
     /**

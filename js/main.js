@@ -143,6 +143,7 @@ Quiz.main = {
         Quiz.ui.question.render();
         Quiz.ui.players.render();
         Quiz.ui.buzzer.render();
+        Quiz.ui.stats.render();
         Quiz.ui.admin.render();
     },
 

@@ -36,6 +36,7 @@ Quiz.ui.admin = {
         Quiz.dom.on('btn-prev', 'click', function () { Quiz.game.prev(); });
         Quiz.dom.on('btn-next', 'click', function () { Quiz.game.next(); });
         Quiz.dom.on('btn-toggle-answer', 'click', function () { Quiz.game.toggleAnswer(); });
+        Quiz.dom.on('btn-toggle-stats', 'click', function () { Quiz.game.toggleStats(); });
         Quiz.dom.on('btn-reset-penalties', 'click', function () { Quiz.game.clearPenalties(); });
         Quiz.dom.on('btn-intro', 'click', function () { Quiz.game.playIntro(); });
 
@@ -154,11 +155,16 @@ Quiz.ui.admin = {
         var current = store.currentQuestion();
         var last = store.questions.length - 1;
 
-        // Кнопка показа ответа — единственная с состоянием: подпись должна
-        // говорить, что случится по нажатию, а не что происходит сейчас.
+        // Две кнопки с состоянием: подпись должна говорить, что случится
+        // по нажатию, а не что происходит сейчас.
         var revealed = !!(store.game && store.game.show_answer);
         Quiz.dom.setText('btn-toggle-answer', revealed ? 'Скрыть' : 'Ответ');
         Quiz.dom.el('btn-toggle-answer').classList.toggle('is-on', revealed);
+
+        var stats = !!(store.game && store.game.show_stats);
+        Quiz.dom.setText('btn-toggle-stats',
+                         stats ? 'Скрыть статистику' : 'Показать статистику');
+        Quiz.dom.el('btn-toggle-stats').classList.toggle('is-on', stats);
 
         // За краем списка идти некуда. Из «вопрос не выбран» вперёд можно:
         // это переход на первый.

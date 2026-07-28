@@ -148,8 +148,17 @@ Quiz.realtime = {
             Quiz.store.answerLog = list.filter(function (a) {
                 return a.id !== payload.old.id;
             });
-        } else if (payload.new.question_id === (Quiz.store.game || {}).current_question_id) {
-            Quiz.store.answerLog = this.upsert(list, payload.new);
+            Quiz.store.gameAnswerLog = Quiz.store.gameAnswerLog.filter(function (a) {
+                return a.id !== payload.old.id;
+            });
+        } else {
+            // Журнал игры принимает оценку любого вопроса — таблица
+            // статистики считает по всей игре. Список текущего вопроса
+            // по-прежнему берёт только своё.
+            Quiz.store.gameAnswerLog = this.upsert(Quiz.store.gameAnswerLog, payload.new);
+            if (payload.new.question_id === (Quiz.store.game || {}).current_question_id) {
+                Quiz.store.answerLog = this.upsert(list, payload.new);
+            }
         }
         this.onChange();
     },
@@ -176,6 +185,17 @@ Quiz.realtime = {
         } else {
             Quiz.store.answerLog = [];
         }
+
+        // Журнал всей игры сюда попал по той же необходимости, что и
+        // список вопросов, только с другого конца. Новые оценки realtime
+        // приносит исправно, а вот исчезновение строк — нет: у answer_log
+        // нет replica identity full (см. 001_schema), поэтому в событии
+        // DELETE приезжает один первичный ключ, и серверный фильтр
+        // `game_id=eq.<id>` его отбрасывает. «Сброс игры» и повторный
+        // импорт стирают журнал каскадом вместе с вопросами — узнать об
+        // этом можно только перечиткой, и вот она.
+        Quiz.store.gameAnswerLog = await Quiz.db.getGameAnswerLog(game.id);
+
         await this.reloadRevealedAnswer();
     },
 

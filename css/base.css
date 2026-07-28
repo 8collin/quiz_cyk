@@ -201,3 +201,81 @@ body {
     background: var(--accent-blue);
     cursor: pointer;
 }
+
+/* --- Статистика ------------------------------------------------------
+   Слой один на обе роли, поэтому живёт здесь, а не в admin.css или
+   player.css. Выше буззера игрока (z-index 50 в player.css) и ниже
+   экрана входа (100): выход из игры обязан перекрывать всё. */
+.stats-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.88);
+}
+.stats-box {
+    background: var(--bg-panel);
+    border: var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%;
+    max-width: 640px;
+    /* Список игроков длиннее экрана прокручивается внутри рамки, а не
+       уносит за край сам слой. */
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.stats-title {
+    font-size: 1.3rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 16px;
+    text-align: center;
+}
+/* Шесть колонок в телефон по ширине не влезают, поэтому прокручивается
+   таблица, а не страница. */
+.stats-scroll { overflow: auto; }
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+.stats-table th,
+.stats-table td {
+    padding: 8px 10px;
+    text-align: center;
+    white-space: nowrap;
+}
+.stats-table th {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: var(--border-subtle);
+    /* Шапка остаётся на месте, пока прокручивается длинный список. */
+    position: sticky;
+    top: 0;
+    background: var(--bg-panel);
+}
+.stats-table tr + tr td { border-top: var(--border-subtle); }
+
+/* Имя — единственная колонка, которую нельзя ужимать: остальные шириной
+   в одну-две цифры. */
+.stats-table .stats-name {
+    text-align: left;
+    width: 99%;
+    white-space: normal;
+    font-weight: 700;
+}
+.stats-table .stats-score {
+    font-weight: 900;
+    font-size: 1.15rem;
+    color: var(--accent-blue);
+}
+.stats-table .is-empty { color: var(--text-muted); opacity: 0.4; }

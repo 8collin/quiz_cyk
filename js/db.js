@@ -175,6 +175,22 @@ Quiz.db = {
     },
 
     /**
+     * Журнал всей игры — из него считается таблица статистики.
+     *
+     * Отдельно от getAnswerLog: тот берёт один вопрос и питает бейдж со
+     * звёздочкой, а тут нужен разрез по игре целиком. Группировать на
+     * стороне базы незачем — это десятки строк, и клиент сложит их сам.
+     */
+    getGameAnswerLog: async function (gameId) {
+        return this.unwrap(
+            await this.client
+                .from('answer_log')
+                .select('id, question_id, participant_id, delta')
+                .eq('game_id', gameId)
+        );
+    },
+
+    /**
      * Ответ на вопрос — если его вообще разрешено видеть.
      *
      * Никакой проверки «а показал ли ведущий» здесь нет и быть не должно:
@@ -220,6 +236,16 @@ Quiz.db = {
             await this.client
                 .from('game')
                 .update({ show_answer: !!value })
+                .eq('id', gameId)
+        );
+    },
+
+    /** Показ таблицы статистики. Флаг общий, поэтому лежит в строке game. */
+    setShowStats: async function (gameId, value) {
+        return this.unwrap(
+            await this.client
+                .from('game')
+                .update({ show_stats: !!value })
                 .eq('id', gameId)
         );
     },

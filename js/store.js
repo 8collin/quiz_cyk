@@ -30,6 +30,9 @@ Quiz.store = {
     /** Строки answer_log по текущему вопросу, для бейджа со звёздочкой. */
     answerLog: [],
 
+    /** Строки answer_log по всей игре, для таблицы статистики. */
+    gameAnswerLog: [],
+
     /** Открытый ответ на текущий вопрос; null, пока ведущий его не показал. */
     revealedAnswer: null,
 
@@ -71,6 +74,49 @@ Quiz.store = {
         }).length;
     },
 
+    /** Оценки, у которых в таблице статистики своя колонка, по порядку. */
+    STAT_DELTAS: [-1, 0, 1, 2],
+
+    /**
+     * Таблица статистики: строка на каждого участника игры.
+     *
+     * Считается из gameAnswerLog, то есть из журнала, а не из
+     * participant.score. Обе величины должны сойтись — счёт ведёт триггер
+     * answer_applies_effects как накопительную сумму тех же дельт, — и
+     * пусть это будет вторая, независимо посчитанная копия: разойдутся
+     * они только если в базу писали мимо игры.
+     *
+     * Строки отдаются в порядке табло игрока: больше очков выше, при
+     * равенстве по имени. Порядок обязан быть полным, иначе строки
+     * прыгают местами при каждой перерисовке.
+     *
+     * Участники без единой оценки остаются в таблице с нулями: «не
+     * отвечал» — это тоже результат, а исчезнувшая строка читалась бы
+     * как сбой.
+     */
+    stats: function () {
+        var log = this.gameAnswerLog;
+        var deltas = this.STAT_DELTAS;
+
+        var rows = this.participants.map(function (participant) {
+            var mine = log.filter(function (a) {
+                return a.participant_id === participant.id;
+            });
+            return {
+                id: participant.id,
+                name: participant.display_name,
+                counts: deltas.map(function (delta) {
+                    return mine.filter(function (a) { return a.delta === delta; }).length;
+                }),
+                score: mine.reduce(function (sum, a) { return sum + a.delta; }, 0)
+            };
+        });
+
+        return rows.sort(function (a, b) {
+            return (b.score - a.score) || a.name.localeCompare(b.name, 'ru');
+        });
+    },
+
     reset: function () {
         this.game = null;
         this.games = [];
@@ -78,6 +124,7 @@ Quiz.store = {
         this.participants = [];
         this.buzz = null;
         this.answerLog = [];
+        this.gameAnswerLog = [];
         this.revealedAnswer = null;
     }
 };
