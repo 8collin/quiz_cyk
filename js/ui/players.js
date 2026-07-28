@@ -130,11 +130,11 @@ Quiz.ui.players = {
 
         box.appendChild(this.button('−1', 'Ответ неверный', function () {
             Quiz.game.score(participant.id, -1);
-        }));
+        }, 'is-minus'));
         box.appendChild(this.button('0', 'Отвечал, но без баллов', function () {
             Quiz.game.score(participant.id, 0);
         }));
-        box.appendChild(this.button('+1', 'Ответ верный', function () {
+        box.appendChild(this.button('+1', 'Ответ аргументированный', function () {
             Quiz.game.score(participant.id, 1);
         }, 'is-plus'));
 
