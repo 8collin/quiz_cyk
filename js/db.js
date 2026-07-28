@@ -22,6 +22,36 @@ Quiz.db = {
         return this.client;
     },
 
+    /** Второй клиент, только для заведения аккаунтов. Заводится по нужде. */
+    signupClient: null,
+
+    /**
+     * Клиент, которым ведущий заводит аккаунты игрокам.
+     *
+     * Отдельный он не из аккуратности: `signUp` делает нового пользователя
+     * ТЕКУЩИМ. Позови её на основном клиенте — и ведущий, заведя аккаунт
+     * Алине, сам окажется в игре Алиной, а его собственная сессия уедет из
+     * localStorage. С `persistSession: false` второй клиент в хранилище не
+     * пишет вовсе, так что основную сессию ему не задеть.
+     */
+    getSignupClient: function () {
+        if (!this.signupClient) {
+            var cfg = Quiz.config;
+            this.signupClient = window.supabase.createClient(
+                cfg.SUPABASE_URL,
+                cfg.SUPABASE_ANON_KEY,
+                {
+                    auth: {
+                        persistSession: false,
+                        autoRefreshToken: false,
+                        detectSessionInUrl: false
+                    }
+                }
+            );
+        }
+        return this.signupClient;
+    },
+
     /**
      * Разворачивает обёртку { data, error }, чтобы вызывающий код просто
      * ждал значение. Ошибка бросается с сохранением кода Postgres в

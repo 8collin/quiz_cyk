@@ -18,7 +18,13 @@
         <form class="login-box" id="login-form" autocomplete="on">
             <h1 class="login-title">Вход в игру</h1>
             <p class="login-error" id="login-error" role="alert"></p>
-            <input type="email"    id="login-email" class="login-input" placeholder="E-mail" autocomplete="username" required>
+            <!-- Имя, а не почта. Адрес для Supabase собирается из имени в
+                 Quiz.auth.loginFor() и наружу не показывается никогда.
+                 Поле обязано быть type="text": type="email" не пропустит
+                 «Алина» дальше проверки формы. Вписать адрес целиком тоже
+                 можно — это запасная дверь для аккаунтов, заведённых до
+                 этой конвенции. -->
+            <input type="text"     id="login-name" class="login-input" placeholder="Имя" autocomplete="username" required>
             <input type="password" id="login-password" class="login-input" placeholder="Пароль" autocomplete="current-password" required>
             <button type="submit" class="login-submit" id="login-submit">Войти</button>
         </form>
@@ -26,7 +32,13 @@
 
     <div id="screen-game" class="screen" hidden>
         <aside class="sidebar">
-            <button class="btn-add-player admin-only" id="btn-add-player">+ Игрок</button>
+            <!-- Два разных «добавить». Первое заводит участника без
+                 аккаунта: буззера у него нет, счёт ведёт ведущий. Второе
+                 заводит вход, с которым человек сядет за свой телефон. -->
+            <button class="btn-add-player admin-only" id="btn-add-player"
+                    title="Участник без аккаунта: буззера нет, счёт ведёте вы">+ Игрок</button>
+            <button class="btn-add-player admin-only" id="btn-add-account"
+                    title="Завести игроку вход: почта и пароль">+ Аккаунт</button>
             <div class="players-scroll" id="players-list"></div>
         </aside>
 

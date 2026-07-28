@@ -8,8 +8,8 @@
 Quiz.ui = Quiz.ui || {};
 Quiz.ui.login = {
     MESSAGES: {
-        credentials: 'Неверная почта или пароль',
-        unconfirmed: 'Почта не подтверждена — попросите ведущего',
+        credentials: 'Неверное имя или пароль',
+        unconfirmed: 'Аккаунт не подтверждён — скажите ведущему',
         network:     'Сервер не отвечает. Проверьте подключение к сети.',
         no_profile:  'Профиль не найден. Скажите ведущему — аккаунт заведён не до конца.',
         unknown:     'Не удалось войти'
@@ -24,13 +24,14 @@ Quiz.ui.login = {
         Quiz.dom.on('login-form', 'submit', async function (event) {
             event.preventDefault();
 
-            var email = Quiz.dom.el('login-email').value;
+            // Имя, а не адрес: в адрес его превратит Quiz.auth.addressFor().
+            var name = Quiz.dom.el('login-name').value;
             var password = Quiz.dom.el('login-password').value;
 
             self.setError('');
             self.setBusy(true);
             try {
-                var profile = await Quiz.auth.signIn(email, password);
+                var profile = await Quiz.auth.signIn(name, password);
                 // Пароль не должен пережить вход даже в поле формы.
                 Quiz.dom.el('login-password').value = '';
                 onSuccess(profile);
