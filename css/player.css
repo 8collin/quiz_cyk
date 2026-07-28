@@ -227,3 +227,135 @@
     /* Ширина цифры фиксирована, иначе кнопка дёргается на каждом тике. */
     font-variant-numeric: tabular-nums;
 }
+
+/* --- Широкий экран: те же блоки в две колонки -------------------------
+
+   Играют не только с телефона: с ноутбука этот же экран растягивался
+   колонкой в 400 px посередине, и по бокам оставалось пусто. Здесь табло
+   и шапка уходят в левую колонку, а вопрос с кнопкой забирают всё
+   остальное.
+
+   Разметка при этом не меняется — как и везде, роль и ширину разбирает
+   CSS. Шапка лежит внутри .main-content, а нужна в левой колонке, поэтому
+   на этой ширине .main-content перестаёт быть коробкой (display: contents)
+   и её дети — шапка, вопрос, кнопка — встают прямо в сетку #screen-game
+   наравне с табло. Через position: fixed, как на телефоне, тоже можно, но
+   тогда высоту шапки приходится вбивать числом в отступ соседа: на
+   телефоне так и сделано, и повторять это второй раз незачем.
+
+   Порог по высоте — не для красоты: телефон в альбомной ориентации бывает
+   шире 900 px (932×430 у 14 Pro Max), и при 430 px высоты от кнопки
+   осталась бы полоска. */
+@media (min-width: 900px) and (min-height: 560px) {
+    .role-player {
+        align-items: stretch;
+        gap: 0;
+        padding: 0;
+    }
+
+    /* Строки: шапка, всё остальное, кнопка. Вопрос занимает первые две
+       (шапка — только левая колонка), табло — вторую и третью.
+
+       Поля справа и между колонками заданы здесь, а не полями карточки
+       вопроса: ей одновременно нужны и предел ширины, и центрирование, а
+       собственные поля с этим не уживаются — при width: 100% они выносят
+       карточку за край колонки ровно на свою величину. Левая колонка
+       отступа не получает: её фон обязан доходить до края экрана. */
+    .role-player #screen-game {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "bar     question"
+            "players question"
+            "players buzzer";
+        align-items: stretch;
+        gap: 0 24px;
+        padding-right: 24px;
+        height: 100%;
+    }
+
+    .role-player .main-content { display: contents; }
+
+    /* Фон и разделитель левой колонки нарисованы дважды, шапкой и табло:
+       колонка сетки — не элемент, красить в ней нечего. */
+    .role-player .top-bar,
+    .role-player .sidebar {
+        background: rgba(30, 41, 59, 0.55);
+        border-right: var(--border-subtle);
+    }
+
+    .role-player .top-bar {
+        grid-area: bar;
+        position: static;
+        width: auto;
+        max-width: none;
+        height: auto;
+        padding: 20px 16px 16px;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 12px;
+        border-bottom: var(--border-subtle);
+        z-index: auto;
+    }
+
+    /* Втроём в 320 px громкость, имя и «Выйти» не помещаются, поэтому имя
+       забирает целую строку (flex-basis: 100%), а громкость и «Выйти»
+       расходятся по краям следующей. Имя поднято наверх через order:
+       в разметке оно стоит между ними, и без этого строк выходило три. */
+    .role-player .header-actions {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        row-gap: 12px;
+    }
+    .role-player .my-name {
+        order: -1;
+        flex: 1 0 100%;
+        font-size: 1.05rem;
+        color: var(--text-soft);
+    }
+    .role-player .volume-slider { width: 110px; }
+
+    /* min-height: 0 — чтобы длинный список прокручивался внутри колонки, а
+       не растягивал строку сетки (по умолчанию у элемента сетки auto). */
+    .role-player .sidebar {
+        grid-area: players;
+        max-width: none;
+        max-height: none;
+        min-height: 0;
+        padding: 16px;
+    }
+
+    /* Ширина ограничена: на широком мониторе строка текста во весь экран
+       нечитаема. Центрируется сам блок, поэтому justify-self, а не поля. */
+    .role-player .question-area {
+        grid-area: question;
+        width: 100%;
+        max-width: 1000px;
+        justify-self: center;
+        margin-top: 24px;
+        padding: 28px 32px;
+    }
+    .role-player .question-text { font-size: 1.6rem; line-height: 1.4; margin-bottom: 20px; }
+
+    /* На телефоне картинка растянута во всю ширину; здесь её надо, наоборот,
+       удержать — иначе она съедает высоту, отведённую тексту. */
+    .role-player .media {
+        width: auto;
+        max-width: 100%;
+        max-height: 45vh;
+        margin-bottom: 16px;
+    }
+
+    .role-player .answer-preview { margin-bottom: 20px; padding: 20px 24px; }
+    .role-player .answer-text { font-size: 1.5rem; }
+
+    .role-player .action-area { grid-area: buzzer; padding: 24px 0; }
+    .role-player .btn-buzzer {
+        width: 100%;
+        max-width: 640px;
+        height: 84px;
+        font-size: 1.5rem;
+    }
+}
