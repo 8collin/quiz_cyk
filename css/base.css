@@ -167,7 +167,7 @@ body {
 .btn:disabled:hover { background-color: var(--bg-card); }
 .btn-circle { width: 42px; height: 42px; padding: 0; border-radius: 50%; }
 
-/* Нажатое состояние кнопки — сейчас только «Ответ» показан. */
+/* Нажатое состояние кнопки — сейчас только «Статистика» на экране. */
 .btn.is-on {
     background-color: var(--accent-gold);
     border-color: var(--accent-gold);

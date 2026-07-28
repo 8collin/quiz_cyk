@@ -22,6 +22,21 @@
 }
 .role-admin .admin-controls,
 .role-admin .header-actions { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+
+/* Вторая строка шапки. Своей строки ей никто не выдаёт: строка объявлена
+   flex-wrap: wrap, и полная ширина — единственное, что здесь означает «с
+   новой строки». Прижата влево, поэтому space-between родителя её не
+   касается — элемент в строке один. */
+.role-admin .nav-controls {
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+/* Всё свободное место строки достаётся отступу слева от этого элемента —
+   так он оказывается у правого края, а стрелки остаются у левого. Ни
+   обёртки вокруг стрелок, ни распорки между ними для этого не нужно. */
+.role-admin .nav-end { margin-left: auto; }
 .role-admin .status { font-size: 1.2rem; font-weight: 700; color: var(--text-muted); }
 
 .role-admin .question-text { font-size: 2.2rem; margin-bottom: 25px; }

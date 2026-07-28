@@ -46,20 +46,17 @@
                     <button class="btn" id="btn-new-game" title="Создать игру">+ Игра</button>
                     <input type="file" id="input-xlsx" accept=".xlsx,.xls" hidden>
                     <label for="input-xlsx" class="btn">Загрузить</label>
-                    <button class="btn" id="btn-toggle-answer">Ответ</button>
-                    <button class="btn" id="btn-toggle-stats">Показать статистику</button>
-                    <button class="btn" id="btn-toggle-sounds" title="Звуки: файлы, громкость, кому что играет">Звуки</button>
+                    <!-- Подпись не меняется: что таблица сейчас на экране,
+                         видно по самой кнопке — она подсвечена классом
+                         is-on. Две формулировки в одной кнопке заставляли
+                         строку прыгать на каждое нажатие. -->
+                    <button class="btn" id="btn-toggle-stats" title="Показать таблицу статистики всем">Статистика</button>
                     <button class="btn" id="btn-reset-penalties" title="Обнулить ожидание у всех">Сброс ⏱</button>
                     <button class="btn" id="btn-restart">Сброс игры</button>
                     <button class="btn btn-circle" id="btn-intro" title="Проиграть интро">🎵</button>
-                    <!-- Стрелки последние: за ними ведущий тянется чаще
-                         всего, а край строки — самое короткое движение. -->
-                    <button class="btn btn-circle" id="btn-prev" title="Предыдущий вопрос">◀</button>
-                    <button class="btn btn-circle" id="btn-next" title="Следующий вопрос">▶</button>
                 </div>
 
                 <div class="header-actions">
-                    <div class="status admin-only" id="status-text"></div>
                     <div class="volume-control" title="Громкость">
                         <span class="volume-icon">🔊</span>
                         <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100">
@@ -68,6 +65,25 @@
                          так его собственный, а шапка и без того плотная. -->
                     <div class="my-name player-only" id="my-name"></div>
                     <button class="btn" id="btn-logout">Выйти</button>
+                </div>
+
+                <!-- Вторая строка шапки: переход по вопросам и номер
+                     текущего. Отдельная строка нужна им потому, что за
+                     стрелками ведущий тянется чаще всего остального, а в
+                     общем ряду их место ползло вслед за длиной названия
+                     игры и переносами. Перенос делает CSS (.nav-controls
+                     во всю ширину), а не разметка: строка одна на обе
+                     роли, у игрока этого блока просто нет. -->
+                <div class="nav-controls admin-only">
+                    <button class="btn btn-circle" id="btn-prev" title="Предыдущий вопрос">◀</button>
+                    <button class="btn btn-circle" id="btn-next" title="Следующий вопрос">▶</button>
+                    <div class="status" id="status-text"></div>
+                    <!-- Правый край той же строки: отжимает её туда CSS
+                         (.nav-end), поэтому обёртка вокруг стрелок не
+                         нужна. Панель звуков от места кнопки не зависит —
+                         она открывается ниже, и старшинство панелей
+                         по-прежнему задаёт их порядок в этой разметке. -->
+                    <button class="btn nav-end" id="btn-toggle-sounds" title="Звуки: файлы, громкость, кому что играет">Звуки</button>
                 </div>
             </header>
 
