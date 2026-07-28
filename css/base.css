@@ -105,6 +105,13 @@ body {
     overflow-wrap: break-word;
     word-break: break-word;
     max-width: 100%;
+    /* Переносы из ячейки Excel — часть текста: ими разделены варианты и
+       строки списка. Разбор их сохраняет (Quiz.excel.cell только
+       обрезает края), textContent доносит до DOM, и упирается всё в
+       CSS — по умолчанию перевод строки схлопнулся бы в пробел.
+       Именно pre-wrap, а не pre: длинную строку всё равно надо
+       переносить по ширине экрана. */
+    white-space: pre-wrap;
 }
 .media {
     max-width: 90%;

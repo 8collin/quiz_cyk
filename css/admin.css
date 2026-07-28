@@ -154,4 +154,15 @@
     text-transform: uppercase;
     letter-spacing: 1px;
 }
-.answer-text { font-size: 1.8rem; color: var(--accent-gold); margin-bottom: 20px; }
+/* Переносы строк — как в тексте вопроса, по той же причине: в ответе
+   ими разделены пункты. Заодно переносы по словам, которых здесь не
+   было: с сохранёнными переводами строки длинное слово вылезало бы за
+   рамку панели. */
+.answer-text {
+    font-size: 1.8rem;
+    color: var(--accent-gold);
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
