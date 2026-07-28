@@ -14,10 +14,15 @@ This is a from-scratch rewrite. The previous version was a single
 mechanics. Do not copy its structure; do consult it when a rule is unclear.
 
 Current state: complete and verified on live sessions — schema, login,
-realtime, the buzzer, the host panel and the Excel import. What is left is
-listed under "Открытые вопросы" in `TODO.md`, plus the checks only a human
-can run: real phones, a real question file, and opening `index.html` from
-disk.
+realtime, the buzzer, the host panel, the Excel import and account
+creation. `TODO.md` lists what is genuinely left, including the checks only
+a human can run: real phones, a real question file, and opening
+`index.html` from disk.
+
+Read `docs/decisions.md` before changing anything that looks arbitrary.
+It records why each of those choices is the way it is — the order of two
+requests, a class deliberately missing from the markup — and most of those
+entries were paid for with a bug that already happened once.
 
 ## Hard constraints — do not violate these
 
