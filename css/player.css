@@ -15,7 +15,17 @@
     background: radial-gradient(circle at center, var(--bg-panel) 0%, var(--bg-base) 100%);
 }
 
-.role-player #screen-game { flex-direction: column; align-items: center; width: 100%; }
+/* gap разводит табло и область вопроса: у обоих вертикальные отступы
+   нулевые, и без него карточка последнего игрока упиралась в рамку
+   вопроса. Именно gap, а не margin у соседа, — слой статистики лежит
+   здесь же третьим ребёнком, но он fixed, то есть не флекс-элемент
+   вовсе, и лишнего промежутка от него не возьмётся. */
+.role-player #screen-game {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+}
 .role-player .sidebar,
 .role-player .main-content { background: transparent; border: none; }
 
