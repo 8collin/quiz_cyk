@@ -5,6 +5,14 @@
    уезжает под чёлку. */
 
 .role-player {
+    /* Ширина телефонной колонки. Её держат шапка, табло и кнопка — те, у
+       кого содержимое от лишней ширины ничего не выигрывает: строка с
+       именем и счётом, ползунок, кнопка под большой палец. Вопрос с
+       ответом этой ширине не подчиняется и занимает экран целиком —
+       иначе на планшете и в узком окне ноутбука текст жался в колонку
+       посередине, а по бокам оставалось пусто. */
+    --phone-col: 400px;
+
     width: 100vw;
     height: 100dvh;
     display: flex;
@@ -47,7 +55,7 @@
     right: 0;
     margin: 0 auto;
     width: 100%;
-    max-width: 400px;
+    max-width: var(--phone-col);
     height: calc(50px + env(safe-area-inset-top));
     padding-top: env(safe-area-inset-top);
     padding-left: 12px;
@@ -94,7 +102,7 @@
 .role-player .sidebar {
     flex: 0 0 auto;
     width: 100%;
-    max-width: 400px;
+    max-width: var(--phone-col);
     max-height: 42vh;
     padding: 0 16px;
     display: flex;
@@ -102,11 +110,12 @@
     overflow: hidden;
 }
 
+/* Ширина не ограничена: вопрос и ответ забирают экран целиком. Держит
+   свою ширину то, что лежит внутри, — кнопка (см. .action-area). */
 .role-player .main-content {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
-    max-width: 400px;
     padding: 0 16px;
 }
 
@@ -175,9 +184,15 @@
     to   { box-shadow: 0 0 16px rgba(16, 185, 129, 0.8); border-color: var(--accent-green); }
 }
 
+/* Кнопка остаётся телефонной ширины и посередине: тянуть её через весь
+   планшет незачем, жмут по ней большим пальцем. Минус 32 — боковые
+   отступы .main-content: у шапки и табло они входят внутрь max-width, а
+   здесь остались снаружи, и без вычитания кнопка вышла бы шире прежней. */
 .role-player .action-area {
     flex: 0 0 auto;
     width: 100%;
+    max-width: calc(var(--phone-col) - 32px);
+    align-self: center;
     display: flex;
     justify-content: center;
     padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
@@ -351,7 +366,13 @@
     .role-player .answer-preview { margin-bottom: 20px; padding: 20px 24px; }
     .role-player .answer-text { font-size: 1.5rem; }
 
-    .role-player .action-area { grid-area: buzzer; padding: 24px 0; }
+    /* Телефонный предел ширины снят: здесь кнопку держит она сама. */
+    .role-player .action-area {
+        grid-area: buzzer;
+        max-width: none;
+        align-self: stretch;
+        padding: 24px 0;
+    }
     .role-player .btn-buzzer {
         width: 100%;
         max-width: 640px;
