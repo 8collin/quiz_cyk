@@ -122,7 +122,9 @@ Quiz.main = {
         await Quiz.realtime.reloadQuestionScoped();
 
         Quiz.realtime.onChange = function () { Quiz.main.render(); };
-        Quiz.realtime.subscribe(game.id);
+        // Ждём именно подтверждения: всё, что ведущий сделает сразу после
+        // загрузки, должно вернуться к нему через подписку, а не пропасть.
+        await Quiz.realtime.subscribe(game.id);
 
         this.render();
     },

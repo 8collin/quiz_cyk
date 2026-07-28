@@ -27,6 +27,16 @@ Quiz.realtime = {
      */
     onGameClosed: function () {},
 
+    /**
+     * Подписка на изменения игры.
+     *
+     * Возвращает промис, который ждёт подтверждения подписки, и ждать его
+     * обязательно. Присоединение к каналу занимает время, и запись,
+     * сделанная сразу после subscribe(), проходит мимо ещё не готовой
+     * подписки: в базе всё верно, а экран показывает прошлое состояние до
+     * следующего события. Ловится это только на цепочке «переключил игру и
+     * тут же что-то сделал» — то есть на импорте вопросов.
+     */
     subscribe: function (gameId) {
         var self = this;
         var forThisGame = 'game_id=eq.' + gameId;
@@ -48,12 +58,18 @@ Quiz.realtime = {
                 { event: '*', schema: 'public', table: 'answer_log', filter: forThisGame },
                 function (payload) { self.handleAnswerLog(payload); })
             .on('broadcast', { event: 'intro' },
-                function () { Quiz.audio.play(Quiz.config.INTRO_SOUND); })
-            .subscribe(function (status) {
-                console.log('realtime:', status);
-            });
+                function () { Quiz.audio.play(Quiz.config.INTRO_SOUND); });
 
-        return this.channel;
+        return new Promise(function (resolve) {
+            self.channel.subscribe(function (status) {
+                console.log('realtime:', status);
+                // Обрыв ждать нечего: SDK сам отсчитывает таймаут и
+                // приходит сюда с TIMED_OUT. Отдаём результат и идём
+                // дальше — без подписки игра всё равно откроется, просто
+                // перестанет обновляться сама.
+                resolve(status === 'SUBSCRIBED');
+            });
+        });
     },
 
     unsubscribe: function () {

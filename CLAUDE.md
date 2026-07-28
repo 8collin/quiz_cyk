@@ -13,9 +13,11 @@ This is a from-scratch rewrite. The previous version was a single
 1300-line `cyk.html` in `damenweb/quiz`, kept only as a reference for game
 mechanics. Do not copy its structure; do consult it when a rule is unclear.
 
-Current state: playable. Schema, login, realtime, the buzzer and the host
-panel are done and verified on live sessions; only the Excel import
-(`js/excel.js`) is still stubbed. See `TODO.md`.
+Current state: complete and verified on live sessions — schema, login,
+realtime, the buzzer, the host panel and the Excel import. What is left is
+listed under "Открытые вопросы" in `TODO.md`, plus the checks only a human
+can run: real phones, a real question file, and opening `index.html` from
+disk.
 
 ## Hard constraints — do not violate these
 

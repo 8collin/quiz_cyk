@@ -10,6 +10,17 @@
  */
 Quiz.ui = Quiz.ui || {};
 Quiz.ui.admin = {
+    /**
+     * Тексты отказов импорта. Причину кодом отдаёт Quiz.excel, переводит
+     * её на человеческий интерфейс — как и на экране входа.
+     */
+    IMPORT_MESSAGES: {
+        library: 'Не загрузилась библиотека чтения Excel. Проверьте подключение к сети.',
+        format:  'Не похоже на файл Excel — откройте его и сохраните как .xlsx.',
+        empty:   'В файле нет строк с вопросами. Первая строка считается заголовком.',
+        unknown: 'Не удалось загрузить вопросы'
+    },
+
     /** Из чего собран текущий список игр — чтобы не пересобирать зря. */
     gamesSignature: null,
 
@@ -38,12 +49,55 @@ Quiz.ui.admin = {
             if (ok) Quiz.game.restart();
         });
 
+        Quiz.dom.on('input-xlsx', 'change', function (event) {
+            var input = event.target;
+            var file = input.files[0];
+            // Сброс сразу: иначе повторный выбор того же файла не даст
+            // события, и «загрузить ещё раз» после ошибки не сработает.
+            input.value = '';
+            if (file) Quiz.ui.admin.importFile(file);
+        });
+
         Quiz.dom.on('select-game', 'change', function (event) {
             var id = event.target.value;
             if (id && id !== (Quiz.store.game || {}).id) {
                 Quiz.game.makeActive(id);
             }
         });
+    },
+
+    /**
+     * Загрузка файла с вопросами.
+     *
+     * Импорт заменяет набор целиком, поэтому спрашиваем — но только когда
+     * есть что терять. На пустой игре, куда вопросы и грузят, лишний
+     * вопрос «вы уверены?» только мешает.
+     */
+    importFile: async function (file) {
+        if (!Quiz.store.game) {
+            window.alert('Сначала выберите или создайте игру.');
+            return;
+        }
+        if (Quiz.store.questions.length) {
+            // Формулировка обходит склонение числительного: «заменит все
+            // 2 вопроса» и «все 5 вопросов» требуют разных форм, а плодить
+            // ради одной строки согласование числительных незачем.
+            var ok = window.confirm(
+                'Загрузка заменит вопросы этой игры (сейчас их ' +
+                Quiz.store.questions.length + '). Продолжить?'
+            );
+            if (!ok) return;
+        }
+
+        try {
+            var count = await Quiz.game.importQuestions(file);
+            window.alert('Загружено вопросов: ' + count);
+        } catch (err) {
+            window.alert(this.IMPORT_MESSAGES[err.reason] || this.IMPORT_MESSAGES.unknown);
+            // warn, а не error: отказ разобранный и показанный человеку —
+            // это не сбой приложения. Так же поступает экран входа.
+            console.warn('Импорт не удался:', err.reason, err.message);
+        }
     },
 
     render: function () {

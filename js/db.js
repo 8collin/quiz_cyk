@@ -271,6 +271,51 @@ Quiz.db = {
         );
     },
 
+    /**
+     * Заменяет вопросы игры целиком — импорт из Excel.
+     *
+     * Принимает [{ text, answerText, imageUrl, answerImageUrl }], то есть
+     * разобранные строки, а не ячейки: про формат файла знает js/excel.js,
+     * про имена столбцов — этот файл, и знать друг про друга им незачем.
+     *
+     * Двумя запросами, а не одним, потому что id вопросов выдаёт база:
+     * ответы можно разложить только после того, как они вернулись. Зато
+     * весь набор уходит целиком — по строчке за раз не пишем.
+     */
+    replaceQuestions: async function (gameId, rows) {
+        await this.deleteQuestions(gameId);
+        if (!rows.length) return [];
+
+        var questions = rows.map(function (row, index) {
+            return {
+                game_id:   gameId,
+                position:  index,
+                text:      row.text,
+                image_url: row.imageUrl
+            };
+        });
+
+        var inserted = this.unwrap(
+            await this.client.from('question').insert(questions).select('id, position')
+        );
+
+        // Сопоставляем по position, а не по порядку возврата: порядок строк
+        // в ответе PostgREST не обещан, и молчаливая перестановка развела бы
+        // вопросы с ответами.
+        var answers = inserted.map(function (question) {
+            var row = rows[question.position];
+            return {
+                question_id: question.id,
+                text:        row.answerText,
+                image_url:   row.answerImageUrl
+            };
+        });
+
+        return this.unwrap(
+            await this.client.from('question_answer').insert(answers)
+        );
+    },
+
     // --- Игры ------------------------------------------------------------
 
     /** Игры этого ведущего, свежие сверху — для выбора активной. */
@@ -317,8 +362,4 @@ Quiz.db = {
                 .neq('id', gameId)
         );
     }
-
-    // --- Ещё не написано:
-    //
-    //   replaceQuestions(gameId, qs)  -> стереть и залить заново из Excel
 };
