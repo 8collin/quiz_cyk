@@ -36,6 +36,12 @@ Quiz.store = {
     /** Открытый ответ на текущий вопрос; null, пока ведущий его не показал. */
     revealedAnswer: null,
 
+    /**
+     * Строки sound. Игре не принадлежат — это общий на всё развёртывание
+     * набор джинглов, поэтому reset() их не трогает.
+     */
+    sounds: [],
+
     isAdmin: function () {
         return !!this.profile && this.profile.role === 'admin';
     },
@@ -72,6 +78,12 @@ Quiz.store = {
         return this.answerLog.filter(function (a) {
             return a.participant_id === participantId;
         }).length;
+    },
+
+    /** Звук по ключу. null, когда такого нет — звать будут `default`. */
+    soundFor: function (key) {
+        if (!key) return null;
+        return this.sounds.find(function (s) { return s.key === key; }) || null;
     },
 
     /** Оценки, у которых в таблице статистики своя колонка, по порядку. */

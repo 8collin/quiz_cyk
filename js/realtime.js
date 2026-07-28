@@ -57,6 +57,13 @@ Quiz.realtime = {
             .on('postgres_changes',
                 { event: '*', schema: 'public', table: 'answer_log', filter: forThisGame },
                 function (payload) { self.handleAnswerLog(payload); })
+            // Звуки к игре не привязаны, поэтому и фильтра нет. Заодно это
+            // единственная здешняя подписка, у которой DELETE доходит с
+            // одним первичным ключом и этого хватает: отбрасывать событие
+            // серверу не по чему, а ключа довольно, чтобы убрать строку.
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'sound' },
+                function (payload) { self.handleSound(payload); })
             .on('broadcast', { event: 'intro' },
                 function () { Quiz.audio.play(Quiz.config.INTRO_SOUND); });
 
@@ -137,6 +144,29 @@ Quiz.realtime = {
         } else {
             Quiz.store.buzz = payload.new;
             this.playJingleFor(payload.new.participant_id);
+        }
+        this.onChange();
+    },
+
+    /**
+     * Звук завели, переименовали, переозвучили или сдвинули ему ползунок.
+     *
+     * Доехать это обязано до каждого устройства, а не только до ведущего:
+     * джингл играет у всех сразу, и громкость к нему применяет тот, у
+     * кого он звучит. Прогрев вызывается здесь же — у нового или
+     * перезалитого звука меняется путь, и его надо скачать заранее, а не
+     * в момент, когда кто-то нажмёт буззер.
+     */
+    handleSound: function (payload) {
+        var list = Quiz.store.sounds;
+
+        if (payload.eventType === 'DELETE') {
+            Quiz.store.sounds = list.filter(function (s) {
+                return s.id !== payload.old.id;
+            });
+        } else {
+            Quiz.store.sounds = this.upsert(list, payload.new);
+            Quiz.audio.warmUp();
         }
         this.onChange();
     },

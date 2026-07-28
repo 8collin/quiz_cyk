@@ -117,22 +117,100 @@
 .btn-mini.is-plus   { background: rgba(16, 185, 129, 0.35); }
 .btn-mini.is-danger { background: rgba(239, 68, 68, 0.18); }
 
-/* Статистика ведущему — на место вопроса, а не поверх экрана.
+/* Панели ведущего встают на место вопроса, а не поверх экрана.
    Накрывающий слой прятал заодно и шапку, то есть ту самую кнопку,
    которой его закрывают: открыв статистику, ведущий оставался с ней
    до перезагрузки страницы.
 
-   Вопрос убирается соседством, без флага в JS и без второго класса на
-   <body>: блок статистики стоит в разметке прямо перед ним, так что его
-   собственный `hidden` — единственное, что решает, кто из двоих на
-   экране. Порядок в index.html поэтому значим, там об этом сказано. */
-.role-admin .stats-view {
+   Кто кого гасит — решает соседство, без флага в JS и без второго класса
+   на <body>: открытая панель прячет всё, что стоит НИЖЕ неё в колонке.
+   Значит, порядок в index.html и есть старшинство — звуки, статистика,
+   вопрос, — и там об этом сказано. Собственный `hidden` каждой панели
+   остаётся единственным, что решает, кто на экране. */
+.role-admin .stats-view,
+.role-admin .sounds-view {
     flex-grow: 1;
     min-height: 0;
     align-items: flex-start;
     padding: 30px;
 }
-.role-admin .stats-view:not([hidden]) + .question-area { display: none; }
+.role-admin .sounds-view:not([hidden]) ~ .stats-view,
+.role-admin .sounds-view:not([hidden]) ~ .question-area,
+.role-admin .stats-view:not([hidden])  ~ .question-area { display: none; }
+
+/* Панель звуков. Ширина больше, чем у статистики: в строке ползунок,
+   и на узкой колонке ему не остаётся хода. */
+.sounds-view { display: flex; justify-content: center; }
+.sounds-box {
+    background: var(--bg-panel);
+    border: var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.sounds-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+/* Заголовок отжимает кнопки вправо, чтобы «Закрыть» всегда была на краю. */
+.sounds-head .stats-title { margin: 0; flex-grow: 1; text-align: left; }
+.sounds-scroll { overflow-y: auto; }
+
+.sounds-group {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 16px 0 8px;
+    border-bottom: var(--border-subtle);
+    padding-bottom: 6px;
+}
+.sounds-group:first-child { margin-top: 0; }
+
+.sound-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+}
+.sound-row + .sound-row { border-top: var(--border-subtle); }
+/* Ключ занимает всё свободное место, остальное — по содержимому. */
+.sound-key {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sound-row.is-system .sound-key { color: var(--accent-gold); }
+
+.sound-slider { flex: 0 0 140px; }
+/* Ширина фиксирована: без неё строка дёргается, пока тянут ползунок. */
+.sound-percent {
+    flex: 0 0 46px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+.sound-select {
+    flex: 0 0 200px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background-color: var(--bg-base);
+    color: var(--text-soft);
+    font-family: inherit;
+    cursor: pointer;
+}
+.sound-row .btn-mini { flex: 0 0 auto; padding: 5px 12px; }
+.sound-note { color: var(--text-muted); padding: 8px 0; }
 
 /* Панель ответа — только у ведущего, видна всегда, когда игра загружена. */
 .answer-preview {

@@ -190,6 +190,100 @@ Quiz.db = {
         );
     },
 
+    // --- Звуки ------------------------------------------------------------
+    //
+    // Файл лежит в бакете `sounds`, строка — здесь. Имя бакета, как и имена
+    // таблиц, дальше этого файла не уходит.
+
+    /** Имя бакета с джинглами. */
+    SOUND_BUCKET: 'sounds',
+
+    /** Все звуки. Читать их разрешено каждому: джингл играет у всех сразу. */
+    getSounds: async function () {
+        return this.unwrap(
+            await this.client
+                .from('sound')
+                .select('id, key, title, path, volume, is_system')
+                .order('is_system', { ascending: false })
+                .order('key', { ascending: true })
+        );
+    },
+
+    /**
+     * Публичный адрес файла.
+     *
+     * Собирается здесь, а не хранится в строке: домен проекта не должен
+     * оказаться размазанным по таблице. Кодирование пути (пробелы,
+     * кириллица в именах) берёт на себя SDK.
+     */
+    soundUrl: function (path) {
+        if (!path) return null;
+        return this.client.storage
+            .from(this.SOUND_BUCKET)
+            .getPublicUrl(path).data.publicUrl;
+    },
+
+    /**
+     * Заливка файла.
+     *
+     * Путь сюда приходит уже сгенерированным и на каждую заливку новый —
+     * см. Quiz.ui.sounds.freshPath, там же причины. Поэтому `upsert` не
+     * нужен: класть поверх нечего.
+     */
+    uploadSound: async function (path, file) {
+        var result = await this.client.storage
+            .from(this.SOUND_BUCKET)
+            .upload(path, file, { contentType: file.type || 'audio/mpeg' });
+        return this.unwrap(result);
+    },
+
+    deleteSoundFile: async function (path) {
+        return this.unwrap(
+            await this.client.storage.from(this.SOUND_BUCKET).remove([path])
+        );
+    },
+
+    /** Строка звука. Ключ уникален, поэтому повторная заливка — это upsert. */
+    saveSound: async function (sound) {
+        return this.unwrap(
+            await this.client
+                .from('sound')
+                .upsert({
+                    key: sound.key,
+                    title: sound.title,
+                    path: sound.path,
+                    is_system: !!sound.isSystem
+                }, { onConflict: 'key' })
+                .select('id, key, title, path, volume, is_system')
+                .single()
+        );
+    },
+
+    setSoundVolume: async function (soundId, volume) {
+        return this.unwrap(
+            await this.client
+                .from('sound')
+                .update({ volume: volume })
+                .eq('id', soundId)
+        );
+    },
+
+    deleteSound: async function (soundId) {
+        return this.unwrap(
+            await this.client.from('sound').delete().eq('id', soundId)
+        );
+    },
+
+    /** Джингл игрока. null снимает назначение — заиграет `default`. */
+    setParticipantSound: async function (participantId, soundKey) {
+        return this.unwrap(
+            await this.client
+                .from('participant')
+                .update({ sound_key: soundKey || null })
+                .eq('id', participantId)
+        );
+    },
+
     /**
      * Ответ на вопрос — если его вообще разрешено видеть.
      *

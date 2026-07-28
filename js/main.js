@@ -22,6 +22,7 @@ Quiz.main = {
 
         this.bindVolume();
         Quiz.ui.buzzer.bind();
+        Quiz.ui.sounds.bind();
         // Сразу, на пустом store: получится «ОЖИДАНИЕ», заблокировано. Роль
         // на <body> встаёт в enterGame раньше, чем доедет состояние игры, и
         // без этой строки телефон после F5 успевает показать доступную
@@ -113,6 +114,14 @@ Quiz.main = {
         Quiz.store.game = game;
         Quiz.timing.applyGameRow(game);
 
+        // Звуки к игре не привязаны и переживают её смену, поэтому reset()
+        // их не трогал. Читаются они всё равно здесь: это единственная
+        // точка, через которую проходит и первый вход, и переезд на другую
+        // игру. Прогрев сразу за чтением — джингл буззера обязан звучать
+        // без похода в сеть.
+        Quiz.store.sounds = await Quiz.db.getSounds();
+        Quiz.audio.warmUp();
+
         if (Quiz.store.isAdmin()) {
             Quiz.store.games = await Quiz.db.getMyGames(Quiz.store.profile.id);
         }
@@ -144,6 +153,7 @@ Quiz.main = {
         Quiz.ui.players.render();
         Quiz.ui.buzzer.render();
         Quiz.ui.stats.render();
+        Quiz.ui.sounds.render();
         Quiz.ui.admin.render();
     },
 

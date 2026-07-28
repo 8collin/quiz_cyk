@@ -48,6 +48,7 @@
                     <label for="input-xlsx" class="btn">Загрузить</label>
                     <button class="btn" id="btn-toggle-answer">Ответ</button>
                     <button class="btn" id="btn-toggle-stats">Показать статистику</button>
+                    <button class="btn" id="btn-toggle-sounds" title="Звуки: файлы, громкость, кому что играет">Звуки</button>
                     <button class="btn" id="btn-reset-penalties" title="Обнулить ожидание у всех">Сброс ⏱</button>
                     <button class="btn" id="btn-restart">Сброс игры</button>
                     <button class="btn btn-circle" id="btn-intro" title="Проиграть интро">🎵</button>
@@ -70,15 +71,34 @@
                 </div>
             </header>
 
+            <!-- Панель звуков — только ведущему и только на его
+                 устройстве: флага в базе у неё нет, игроки о ней не
+                 знают. Стоит первой из трёх: правила в admin.css гасят
+                 всё, что НИЖЕ открытой панели, поэтому порядок здесь
+                 задаёт старшинство — звуки, статистика, вопрос. -->
+            <div class="sounds-view admin-only" id="sounds-view" hidden>
+                <div class="sounds-box">
+                    <div class="sounds-head">
+                        <div class="stats-title">Звуки</div>
+                        <input type="file" id="input-sound" accept="audio/*" hidden>
+                        <label for="input-sound" class="btn">Залить звук</label>
+                        <button class="btn" id="btn-sounds-close">Закрыть</button>
+                    </div>
+                    <div class="sounds-scroll">
+                        <div class="sounds-group">Файлы</div>
+                        <div id="sounds-list"></div>
+                        <div class="sounds-group">Кому что играет</div>
+                        <div id="sounds-players"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Статистика. Одна разметка на обе роли и без классов роли:
                  показана она или нет, решает флаг show_stats в строке
                  game. Ведущему она встаёт ВМЕСТО вопроса — накрывать ему
                  экран нельзя, под слоем осталась бы и кнопка, которой
                  его закрывают. Игроку — слоем поверх всего, там закрывает
-                 ведущий. Стоит перед вопросом не для красоты: правило
-                 `.stats-view:not([hidden]) + .question-area` в admin.css
-                 прячет вопрос соседством, и переставить их местами
-                 значит его сломать. -->
+                 ведущий. -->
             <div class="stats-view" id="stats-view" hidden>
                 <div class="stats-box">
                     <div class="stats-title">Статистика игры</div>
@@ -157,6 +177,7 @@
     <script src="js/ui/question.js"></script>
     <script src="js/ui/buzzer.js"></script>
     <script src="js/ui/stats.js"></script>
+    <script src="js/ui/sounds.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
