@@ -39,7 +39,6 @@ Quiz.ui.users = {
     bind: function () {
         var self = this;
         Quiz.dom.on('btn-toggle-users', 'click', function () { self.toggle(); });
-        Quiz.dom.on('btn-users-close', 'click', function () { self.toggle(); });
         Quiz.dom.on('btn-add-account', 'click', function () { self.createAccount(); });
     },
 
@@ -227,7 +226,24 @@ Quiz.ui.users = {
             box.appendChild(this.note('Аккаунтов пока нет — заведите первый.'));
             return;
         }
-        Quiz.store.users.forEach(function (user) {
+
+        // Администраторы — сверху, внутри группы по имени. Между ними и
+        // остальными — разделитель: ставим его перед первым не-админом и
+        // только если админы вообще есть.
+        var sorted = Quiz.store.users.slice().sort(function (a, b) {
+            var ra = a.role === 'admin' ? 0 : 1;
+            var rb = b.role === 'admin' ? 0 : 1;
+            return (ra - rb) || a.display_name.localeCompare(b.display_name, 'ru');
+        });
+
+        var sawAdmin = false, sepDone = false;
+        sorted.forEach(function (user) {
+            if (user.role === 'admin') {
+                sawAdmin = true;
+            } else if (sawAdmin && !sepDone) {
+                box.appendChild(self.separator());
+                sepDone = true;
+            }
             box.appendChild(self.userRow(user));
         });
     },
@@ -241,7 +257,6 @@ Quiz.ui.users = {
 
     userRow: function (user) {
         var self = this;
-        var isMe = !!Quiz.store.profile && Quiz.store.profile.id === user.id;
 
         var row = document.createElement('div');
         row.className = 'user-row' + (user.role === 'admin' ? ' is-host' : '');
@@ -267,14 +282,15 @@ Quiz.ui.users = {
             self.setPassword(user);
         }));
 
-        // Себя ведущий не удаляет. Функция это тоже не пропустит, но
-        // кнопка, которая всегда отвечает отказом, — это не защита, а
-        // ловушка.
-        if (!isMe) {
-            row.appendChild(this.button('✕', 'Удалить аккаунт', function () {
-                self.remove(user);
-            }, 'is-danger'));
-        }
+        // Кнопка удаления есть у каждой строки — ради ровной разметки, — но
+        // у админов (включая себя) выключена: снести администратора панель
+        // не даёт. Правило «себя удалить нельзя» это покрывает заодно —
+        // ведущий сам админ.
+        var canDelete = user.role !== 'admin';
+        var del = this.button('✕', canDelete ? 'Удалить аккаунт' : 'Администратора удалить нельзя',
+            function () { if (canDelete) self.remove(user); }, 'is-danger');
+        del.disabled = !canDelete;
+        row.appendChild(del);
         return row;
     },
 
@@ -283,6 +299,13 @@ Quiz.ui.users = {
         node.className = 'sound-note';
         node.textContent = text;
         return node;
+    },
+
+    /** Разделитель между админами и остальными; стиль — в admin.css. */
+    separator: function () {
+        var sep = document.createElement('div');
+        sep.className = 'panel-separator';
+        return sep;
     },
 
     button: function (label, title, handler, extraClass) {

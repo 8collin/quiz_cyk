@@ -38,7 +38,6 @@ Quiz.ui.sounds = {
     bind: function () {
         var self = this;
         Quiz.dom.on('btn-toggle-sounds', 'click', function () { self.toggle(); });
-        Quiz.dom.on('btn-sounds-close', 'click', function () { self.toggle(); });
 
         Quiz.dom.on('input-sound', 'change', function (event) {
             var input = event.target;
@@ -208,7 +207,24 @@ Quiz.ui.sounds = {
             box.appendChild(this.note('Звуков пока нет — залейте первый.'));
             return;
         }
-        Quiz.store.sounds.forEach(function (sound) {
+
+        // Системные (default, intro) — сверху, остальные по ключу. Между
+        // ними разделитель: перед первым несистемным и только если
+        // системные вообще есть.
+        var sorted = Quiz.store.sounds.slice().sort(function (a, b) {
+            var sa = a.is_system ? 0 : 1;
+            var sb = b.is_system ? 0 : 1;
+            return (sa - sb) || String(a.key).localeCompare(String(b.key), 'ru');
+        });
+
+        var sawSystem = false, sepDone = false;
+        sorted.forEach(function (sound) {
+            if (sound.is_system) {
+                sawSystem = true;
+            } else if (sawSystem && !sepDone) {
+                box.appendChild(self.separator());
+                sepDone = true;
+            }
             box.appendChild(self.soundRow(sound));
         });
     },
@@ -267,11 +283,14 @@ Quiz.ui.sounds = {
             Quiz.dom.el('input-sound').click();
         }));
 
-        if (!sound.is_system) {
-            row.appendChild(this.button('✕', 'Удалить звук', function () {
-                self.remove(sound);
-            }, 'is-danger'));
-        }
+        // Кнопка удаления есть у каждой строки — ради ровной разметки, — но
+        // у системных (default, intro) выключена: без них игре нечем
+        // заменить пропавший джингл.
+        var canDelete = !sound.is_system;
+        var del = this.button('✕', canDelete ? 'Удалить звук' : 'Системный звук удалить нельзя',
+            function () { if (canDelete) self.remove(sound); }, 'is-danger');
+        del.disabled = !canDelete;
+        row.appendChild(del);
         return row;
     },
 
@@ -386,6 +405,13 @@ Quiz.ui.sounds = {
         node.className = 'sound-note';
         node.textContent = text;
         return node;
+    },
+
+    /** Разделитель между системными звуками и остальными; стиль — в admin.css. */
+    separator: function () {
+        var sep = document.createElement('div');
+        sep.className = 'panel-separator';
+        return sep;
     },
 
     button: function (label, title, handler, extraClass) {
