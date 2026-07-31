@@ -186,6 +186,14 @@
         <img class="lightbox-image" id="lightbox-image" alt="">
     </div>
 
+    <!-- Полоса «связь потеряна». Снаружи #screen-game и без классов роли:
+         нужна обеим ролям и поверх всего. Спрятана по умолчанию; показывает
+         её Quiz.ui.conn, когда realtime теряет канал (js/ui/conn.js). -->
+    <div class="conn-banner" id="conn-banner" hidden>
+        <span class="conn-banner-text">Связь потеряна. Переподключаюсь…</span>
+        <button class="btn" id="btn-reconnect">Обновить</button>
+    </div>
+
     <!-- ================================================================
          Сторонние библиотеки. Обе — классические скрипты, выставляющие
          глобальные объекты (window.supabase, window.XLSX), поэтому
@@ -223,6 +231,7 @@
     <!-- После sounds.js: панель пользователей закрывает панель звуков,
          когда открывается, и обращается к ней по имени. -->
     <script src="js/ui/users.js"></script>
+    <script src="js/ui/conn.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

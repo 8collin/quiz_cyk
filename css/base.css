@@ -261,6 +261,30 @@ body {
 }
 .lightbox-close:hover { background: var(--bg-raised); }
 
+/* --- Полоса «связь потеряна» -----------------------------------------
+   Живёт поверх игры обеих ролей, ниже экрана входа (на входе связь ни при
+   чём) и выше просмотра картинки. Появляется и прячется через Quiz.ui.conn
+   по состоянию realtime; янтарный — предупреждение, а не ошибка. */
+.conn-banner {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 95;
+    max-width: calc(100% - 24px);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    background: var(--bg-panel);
+    border: 1px solid var(--accent-gold);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.conn-banner-text { font-weight: 700; color: var(--accent-gold); }
+/* Строка узкая — кнопка в ней меньше основной. */
+.conn-banner .btn { padding: 6px 14px; }
+
 /* --- Статистика ------------------------------------------------------
    Здесь только сама таблица — она одна на обе роли. Где она появляется,
    решают ролевые файлы: ведущему вместо вопроса (admin.css), игроку

@@ -33,6 +33,7 @@ Quiz.main = {
         Quiz.ui.users.bind();
         Quiz.ui.admin.bind();
         Quiz.ui.lightbox.bind();
+        Quiz.ui.conn.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
 
@@ -43,6 +44,11 @@ Quiz.main = {
 
         // Канал переподключился после обрыва — перечитать пропущенное.
         Quiz.realtime.onRecovered = function () { return Quiz.main.refreshState(); };
+
+        // Состояние связи — в полосу «переподключаюсь».
+        Quiz.realtime.onStatus = function (connected) {
+            Quiz.ui.conn.setConnected(connected);
+        };
 
         // Токен может истечь или сессию закроют из другой вкладки.
         Quiz.auth.onSignedOut(function () { Quiz.main.showLogin(); });
@@ -216,6 +222,9 @@ Quiz.main = {
         // Экран входа лежит выше просмотра картинки и накрыл бы его собой,
         // а после следующего входа тот вынырнул бы обратно.
         Quiz.ui.lightbox.close();
+        // Полосе «переподключаюсь» на экране входа делать нечего: связь с
+        // игрой мы разорвали сами.
+        Quiz.ui.conn.hide();
         // Чужое имя не должно мелькнуть в шапке при следующем входе.
         Quiz.dom.setText('my-name', '');
         Quiz.ui.login.show();
