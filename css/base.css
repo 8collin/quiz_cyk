@@ -178,6 +178,16 @@ body {
 }
 .btn.is-on:hover { background-color: var(--accent-gold); }
 
+/* Красная кнопка — удаление уровня всей игры («− Игра»). Ярче «✕» в
+   списках: промахнуться мимо неё дороже. */
+.btn.is-danger {
+    background-color: var(--accent-red);
+    border-color: var(--accent-red);
+    color: var(--text-main);
+}
+.btn.is-danger:hover { background-color: var(--accent-red); filter: brightness(1.12); }
+.btn.is-danger:disabled:hover { background-color: var(--accent-red); filter: none; }
+
 /* Правая группа шапки — строка в обеих ролях. Раньше это правило было
    только у ведущего, и у игрока громкость с кнопкой «Выйти» вставали друг
    под друга, вылезая за шапку высотой 50 px. */

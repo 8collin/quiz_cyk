@@ -36,6 +36,18 @@ Quiz.ui.admin = {
             if (title) Quiz.game.createGame(title);
         });
 
+        Quiz.dom.on('btn-delete-game', 'click', function () {
+            var game = Quiz.store.game;
+            if (!game) return;
+            // Необратимо: вместе с игрой каскадом уходят её вопросы, ответы,
+            // счёт и журнал.
+            var ok = window.confirm(
+                'Удалить игру «' + (game.title || 'Без названия') + '»?\n\n' +
+                'Её вопросы, ответы, счёт и журнал будут стёрты безвозвратно.'
+            );
+            if (ok) Quiz.game.deleteGame();
+        });
+
         Quiz.dom.on('btn-restart', 'click', function () {
             // Необратимо: вместе с вопросами каскадом уходят ответы и журнал.
             var ok = window.confirm(
@@ -112,6 +124,9 @@ Quiz.ui.admin = {
         Quiz.dom.el('btn-prev').disabled = !current || current.position === 0;
         Quiz.dom.el('btn-next').disabled = !store.questions.length ||
             (!!current && current.position >= last);
+
+        // Удалять нечего, пока активной игры нет.
+        Quiz.dom.el('btn-delete-game').disabled = !store.game;
 
         this.renderGames();
     },
