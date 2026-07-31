@@ -15,8 +15,41 @@
 Quiz.realtime = {
     channel: null,
 
+    /** id игры, на которую сейчас подписаны, — нужен переподключению. */
+    gameId: null,
+
+    /** Живо ли соединение прямо сейчас. Ведёт _handleStatus. */
+    connected: false,
+
+    /**
+     * Хотим ли мы вообще быть подключёнными. Ставится в false явным
+     * unsubscribe() (выход, переезд на другую игру) и гасит фоновое
+     * переподключение: без этого таймер поднял бы канал на игру, которую
+     * мы только что покинули.
+     */
+    wantConnection: false,
+
+    /** Восстановились после обрыва — при следующем SUBSCRIBED перечитать. */
+    pendingRecovery: false,
+
+    reconnectTimer: null,
+    reconnectDelay: 0,
+
     /** Ставится из main.js: чем перерисовывать после каждого изменения. */
     onChange: function () {},
+
+    /**
+     * Ставится из main.js: как меняется состояние связи (true/false).
+     * По нему интерфейс показывает полосу «переподключаюсь».
+     */
+    onStatus: function () {},
+
+    /**
+     * Ставится из main.js: перечитать состояние после переподключения.
+     * Пропущенные за время простоя события realtime не доигрывает, поэтому
+     * store надо освежить руками.
+     */
+    onRecovered: function () {},
 
     /**
      * Ставится из main.js: что делать, когда игра перестала быть идущей.
@@ -28,22 +61,46 @@ Quiz.realtime = {
     onGameClosed: function () {},
 
     /**
-     * Подписка на изменения игры.
-     *
-     * Возвращает промис, который ждёт подтверждения подписки, и ждать его
-     * обязательно. Присоединение к каналу занимает время, и запись,
-     * сделанная сразу после subscribe(), проходит мимо ещё не готовой
-     * подписки: в базе всё верно, а экран показывает прошлое состояние до
-     * следующего события. Ловится это только на цепочке «переключил игру и
-     * тут же что-то сделал» — то есть на импорте вопросов.
+     * Подписка на изменения игры. Возвращает промис, который разрешается,
+     * когда подписка подтверждена (или когда стало ясно, что сейчас не
+     * выйдет), и ждать его обязательно. Присоединение к каналу занимает
+     * время, а запись, сделанная сразу после subscribe(), пройдёт мимо
+     * ещё не готовой подписки: в базе всё верно, а экран показывает
+     * прошлое состояние до следующего события. Ловится это на цепочке
+     * «переключил игру и тут же что-то сделал» — то есть на импорте.
      */
     subscribe: function (gameId) {
+        this.unsubscribe();
+        this.gameId = gameId;
+        this.wantConnection = true;
+        this.pendingRecovery = false;
+        this.reconnectDelay = 0;
+        return this._join();
+    },
+
+    /**
+     * Сколько ждём подтверждения, прежде чем отдать управление дальше без
+     * него. SDK обещает свой TIMED_OUT секунд за десять, но полагаться
+     * только на него нельзя: промис subscribe() обязан разрешиться сам,
+     * иначе загрузка повиснет на мёртвой сети — ровно это и случилось у
+     * игрока, чей канал не встал, а единственная отрисовка ждала за ним.
+     */
+    JOIN_TIMEOUT_MS: 12000,
+
+    /** Потолок паузы между попытками переподключения. */
+    RECONNECT_MAX_MS: 15000,
+
+    /**
+     * Заводит канал на текущую игру и вешает обработчики. Вынесено из
+     * subscribe, потому что переподключение делает ровно то же самое —
+     * канал каждый раз новый (см. _scheduleReconnect).
+     */
+    _wire: function () {
         var self = this;
+        var gameId = this.gameId;
         var forThisGame = 'game_id=eq.' + gameId;
 
-        this.unsubscribe();
         this.channel = Quiz.db.client.channel('quiz-' + gameId);
-
         this.channel
             .on('postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'game', filter: 'id=eq.' + gameId },
@@ -66,24 +123,117 @@ Quiz.realtime = {
                 function (payload) { self.handleSound(payload); })
             .on('broadcast', { event: 'intro' },
                 function () { Quiz.audio.play(Quiz.config.INTRO_SOUND); });
+    },
+
+    /**
+     * Присоединяется к заведённому каналу. Промис разрешается на первом же
+     * статусе от SDK или по сторожевому таймауту — что раньше, но ровно
+     * один раз.
+     */
+    _join: function () {
+        var self = this;
+        this._wire();
+        var channel = this.channel;
 
         return new Promise(function (resolve) {
-            self.channel.subscribe(function (status) {
+            var settled = false;
+            var guard = setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                resolve(false);
+            }, self.JOIN_TIMEOUT_MS);
+
+            channel.subscribe(function (status) {
+                // Колбэк канала, который мы уже сменили (переезд игры или
+                // переподключение), нас не касается: у него свой статус, а
+                // this.channel давно другой.
+                if (self.channel !== channel) return;
+
                 console.log('realtime:', status);
-                // Обрыв ждать нечего: SDK сам отсчитывает таймаут и
-                // приходит сюда с TIMED_OUT. Отдаём результат и идём
-                // дальше — без подписки игра всё равно откроется, просто
-                // перестанет обновляться сама.
-                resolve(status === 'SUBSCRIBED');
+                self._handleStatus(status);
+
+                if (!settled) {
+                    settled = true;
+                    clearTimeout(guard);
+                    resolve(status === 'SUBSCRIBED');
+                }
             });
         });
     },
 
-    unsubscribe: function () {
+    /**
+     * Реакция на смену статуса канала — и на подтверждение, и на обрыв.
+     *
+     * Урок инцидента: раньше здесь не было ничего, кроме console.log, и
+     * оборванный канал оставался мёртвым до перезагрузки страницы. Теперь
+     * обрыв заводит переподключение, а восстановление — перечитку: за
+     * время простоя события прошли мимо, и store их не видел.
+     */
+    _handleStatus: function (status) {
+        // Поздний колбэк уже снятого канала (removeChannel мог прислать
+        // CLOSED вдогонку). Этого канала мы больше не хотим — молчим.
+        if (!this.wantConnection) return;
+
+        if (status === 'SUBSCRIBED') {
+            this.connected = true;
+            this.reconnectDelay = 0;
+            this.onStatus(true);
+            if (this.pendingRecovery) {
+                this.pendingRecovery = false;
+                this.onRecovered();
+            }
+            return;
+        }
+
+        // CHANNEL_ERROR / TIMED_OUT / CLOSED — всё, что не подтверждение.
+        this.connected = false;
+        this.onStatus(false);
+        this._scheduleReconnect();
+    },
+
+    /**
+     * Переподключение с нарастающей паузой. Канал каждый раз заводится
+     * ЗАНОВО: убрать старый и создать новый — это заодно поднимает свежий
+     * сокет (SDK рвёт соединение, когда каналов не осталось, и открывает
+     * новое под новый канал), а именно повисший сокет переживает сон
+     * машины, из-за которого канал уже не оживал сам.
+     */
+    _scheduleReconnect: function () {
+        var self = this;
+        if (this.reconnectTimer || !this.wantConnection) return;
+
+        // Когда поднимемся — надо будет перечитать пропущенное.
+        this.pendingRecovery = true;
+        this.reconnectDelay = Math.min((this.reconnectDelay || 500) * 2, this.RECONNECT_MAX_MS);
+
+        this.reconnectTimer = setTimeout(function () {
+            self.reconnectTimer = null;
+            if (!self.wantConnection) return;
+            self._teardownChannel();
+            self._join();
+        }, this.reconnectDelay);
+    },
+
+    _teardownChannel: function () {
         if (this.channel) {
             Quiz.db.client.removeChannel(this.channel);
             this.channel = null;
         }
+    },
+
+    /**
+     * Явный разрыв: выход, переезд на другую игру. Гасит переподключение —
+     * иначе фоновый таймер поднял бы канал на покинутую игру.
+     */
+    unsubscribe: function () {
+        this.wantConnection = false;
+        this.pendingRecovery = false;
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
+        this._teardownChannel();
+        this.connected = false;
     },
 
     /** Интро играет у всех сразу — своё воспроизведение ведущий запускает сам. */

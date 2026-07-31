@@ -41,6 +41,9 @@ Quiz.main = {
         Quiz.realtime.onGameClosed = function () { Quiz.main.loadGame(); };
         Quiz.game.reload = function () { return Quiz.main.loadGame(); };
 
+        // Канал переподключился после обрыва — перечитать пропущенное.
+        Quiz.realtime.onRecovered = function () { return Quiz.main.refreshState(); };
+
         // Токен может истечь или сессию закроют из другой вкладки.
         Quiz.auth.onSignedOut(function () { Quiz.main.showLogin(); });
 
@@ -163,6 +166,33 @@ Quiz.main = {
         await Quiz.realtime.subscribe(game.id);
 
         this.render();
+    },
+
+    /**
+     * Перечитать состояние текущей игры, не трогая живую подписку. Зовётся
+     * после того, как realtime переподключился: события, пропущенные за
+     * время простоя, SDK не доигрывает, поэтому store освежаем сами.
+     *
+     * Если активная игра успела смениться или закрыться, пока связи не
+     * было, — это уже случай полной перезагрузки с новой подпиской, её и
+     * зовём вместо точечной перечитки.
+     */
+    refreshState: async function () {
+        try {
+            var game = await Quiz.db.getActiveGame();
+            if (!game || game.status !== 'running' ||
+                !Quiz.store.game || game.id !== Quiz.store.game.id) {
+                await this.loadGame();
+                return;
+            }
+            Quiz.store.game = game;
+            Quiz.timing.applyGameRow(game);
+            await Quiz.realtime.reloadQuestionScoped();
+            this.render();
+        } catch (err) {
+            console.warn('Не удалось освежить состояние после переподключения:',
+                         err.message);
+        }
     },
 
     render: function () {
