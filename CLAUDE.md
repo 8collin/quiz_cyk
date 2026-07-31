@@ -135,6 +135,17 @@ is what they type to sign in, and is frozen by `guard_profile_role`. The
 address is derived from the name only once, at signup — after the first
 rename the two no longer agree, which is why the panel shows both.
 
+**A player's jingle belongs to the person, not the game.**
+`profile.sound_key` is the source of truth; it is mirrored into
+`participant.sound_key` by a trigger (across every game) and copied by
+`join_game` on entry — the same mechanism as `display_name`, and for the
+same reason: the buzzer reads the key from `participant` on every device
+because `profile` is not in the realtime publication, so the hot path must
+never touch `profile`. `guard_profile_role` freezes `sound_key` for
+non-admins, so the host hands out jingles and a player cannot reassign their
+own. The sounds panel therefore assigns by account, not by participant. See
+`sql/007_sound_global.sql`.
+
 **A Storage object name is not a free-form string.** The `sounds` bucket
 rejects anything outside a narrow ASCII set, and the keys this game uses
 are player names — `Алина.mp3` comes back as `Invalid key`. Paths are
@@ -193,16 +204,16 @@ Do not reach for `127.0.0.1` as a second origin. It looks equivalent to
 specifically, and a specific binding beats the `::`/`0.0.0.0` one, so the
 page silently comes back as an Epic Games error payload.
 
-Signing in: passwords must not pass through the agent, so there is no
-literal to type. The maintainer keeps `js/dev.local.js` outside git
-(`.gitignore` catches `*.local.js`); it declares nothing but data:
+Signing in: the dev credentials live in `js/dev.local.js`, kept outside git
+(`.gitignore` catches `*.local.js`). It declares nothing but data:
 
 ```js
 window.QuizDevAccounts = { admin: { email, password }, player1: {...} };
 ```
 
-Nothing in `index.html` references it. Load it into an already-open page
-and sign in **by reference**, never by value:
+Nothing in `index.html` references it. Reading it and signing in as any of
+these accounts is fine. The tidy way is to load it into an already-open
+page and sign in through the object rather than pasting literals:
 
 ```js
 const acc = window.QuizDevAccounts.admin;
@@ -210,8 +221,8 @@ const profile = await Quiz.auth.signIn(acc.email, acc.password);
 await Quiz.main.enterGame(profile);
 ```
 
-Do not open that file, and do not print its contents. If it stops working,
-describe the symptom and let the maintainer look inside.
+If a login is rejected, the file may be stale — the maintainer sometimes
+changes a password in the dashboard.
 
 The session survives in `localStorage`, so this is needed once per origin —
 until someone signs out or the token expires.

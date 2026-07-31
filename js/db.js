@@ -274,13 +274,20 @@ Quiz.db = {
         );
     },
 
-    /** Джингл игрока. null снимает назначение — заиграет `default`. */
-    setParticipantSound: async function (participantId, soundKey) {
+    /**
+     * Джингл человека. Пишется в profile — значит, общий на все игры.
+     *
+     * До этого писалось в `participant`, и в новой игре джингл терялся.
+     * Теперь правда в профиле, а копию в participant (по всем играм сразу)
+     * ведёт триггер profile_sound_sync_after_update — как с именем. null
+     * снимает назначение: заиграет `default`. См. sql/007_sound_global.sql.
+     */
+    setProfileSound: async function (profileId, soundKey) {
         return this.unwrap(
             await this.client
-                .from('participant')
+                .from('profile')
                 .update({ sound_key: soundKey || null })
-                .eq('id', participantId)
+                .eq('id', profileId)
         );
     },
 
@@ -505,12 +512,18 @@ Quiz.db = {
     // ними, идёт через функции из sql/006_users.sql — они проверяют
     // is_admin() в своём теле, потому что security definer обходит RLS.
 
-    /** Все, у кого есть аккаунт. Профили разрешено читать любому вошедшему. */
+    /**
+     * Все, у кого есть аккаунт. Профили разрешено читать любому вошедшему.
+     *
+     * `sound_key` здесь — правда о джингле человека (общая на все игры).
+     * Раздаёт джинглы панель звуков, читая этот же список; в participant
+     * ключ приезжает копией, её ведёт триггер (см. sql/007_sound_global.sql).
+     */
     getUsers: async function () {
         return this.unwrap(
             await this.client
                 .from('profile')
-                .select('id, display_name, login, role')
+                .select('id, display_name, login, role, sound_key')
                 .order('display_name', { ascending: true })
         );
     },

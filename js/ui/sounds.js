@@ -60,6 +60,28 @@ Quiz.ui.sounds = {
             Quiz.ui.users.render();
         }
         this.render();
+        // Джинглы раздаём по аккаунтам, а не по участникам игры, поэтому
+        // список людей — это профили. В публикации realtime их нет (см.
+        // users.js), так что читаем при открытии — панель уже показана, а
+        // список дозагрузится, как и в панели пользователей.
+        if (this.open) this.loadUsers();
+    },
+
+    /**
+     * Дочитать список аккаунтов — из него строится раздача джинглов.
+     *
+     * `profile` в публикацию realtime не входит, подпиской он не освежается;
+     * читаем при каждом открытии. Список общий с панелью пользователей
+     * (Quiz.store.users), и обе держат его свежим одинаково.
+     */
+    loadUsers: async function () {
+        try {
+            Quiz.store.users = await Quiz.db.getUsers();
+        } catch (err) {
+            console.warn('Список аккаунтов не прочитан:', err.message);
+            return;
+        }
+        this.render();
     },
 
     // --- Заливка ----------------------------------------------------------
@@ -254,12 +276,12 @@ Quiz.ui.sounds = {
     },
 
     remove: async function (sound) {
-        var users = Quiz.store.participants.filter(function (p) {
-            return p.sound_key === sound.key;
+        var assigned = Quiz.store.users.filter(function (u) {
+            return u.sound_key === sound.key;
         });
-        var warning = users.length
-            ? '\n\nОн назначен игрокам: ' +
-              users.map(function (p) { return p.display_name; }).join(', ') +
+        var warning = assigned.length
+            ? '\n\nОн назначен: ' +
+              assigned.map(function (u) { return u.display_name; }).join(', ') +
               '. Им заиграет звук по умолчанию.'
             : '';
         if (!window.confirm('Удалить звук «' + sound.key + '»?' + warning)) return;
@@ -274,31 +296,35 @@ Quiz.ui.sounds = {
         }
     },
 
-    /** Кому какой джингл. Список участников — той же игры, что на экране. */
+    /**
+     * Кому какой джингл. Список — все аккаунты: джингл теперь свойство
+     * человека, а не игры, так что назначить его можно и тому, кого сейчас
+     * в игре нет. Профили держит Quiz.store.users, дочитанный при открытии.
+     */
     renderAssignments: function () {
         var self = this;
         var box = Quiz.dom.el('sounds-players');
         box.textContent = '';
 
-        var players = Quiz.store.participants.slice().sort(function (a, b) {
+        var users = Quiz.store.users.slice().sort(function (a, b) {
             return a.display_name.localeCompare(b.display_name, 'ru');
         });
-        if (!players.length) {
-            box.appendChild(this.note('В игре пока никого нет.'));
+        if (!users.length) {
+            box.appendChild(this.note('Аккаунтов пока нет.'));
             return;
         }
-        players.forEach(function (participant) {
-            box.appendChild(self.assignmentRow(participant));
+        users.forEach(function (user) {
+            box.appendChild(self.assignmentRow(user));
         });
     },
 
-    assignmentRow: function (participant) {
+    assignmentRow: function (user) {
         var row = document.createElement('div');
         row.className = 'sound-row';
 
         var name = document.createElement('span');
         name.className = 'sound-key';
-        name.textContent = participant.display_name;
+        name.textContent = user.display_name;
         row.appendChild(name);
 
         var select = document.createElement('select');
@@ -319,11 +345,11 @@ Quiz.ui.sounds = {
                 select.appendChild(option);
             });
 
-        // Если назначенный звук успели удалить, ключ в строке остался
-        // висячим и в списке его нет — select молча показал бы первый
-        // пункт. Добавляем его отдельной пометкой, иначе ведущий не
-        // увидит, что игрок остался без джингла.
-        var current = participant.sound_key || '';
+        // Если назначенный звук успели удалить, ключ остался висячим и в
+        // списке его нет — select молча показал бы первый пункт. Добавляем
+        // его отдельной пометкой, иначе ведущий не увидит, что человек
+        // остался без джингла.
+        var current = user.sound_key || '';
         if (current && !Quiz.store.soundFor(current)) {
             var lost = document.createElement('option');
             lost.value = current;
@@ -333,14 +359,23 @@ Quiz.ui.sounds = {
         select.value = current;
 
         select.addEventListener('change', function () {
-            Quiz.db.setParticipantSound(participant.id, select.value)
+            var value = select.value;
+            Quiz.db.setProfileSound(user.id, value)
+                .then(function () {
+                    // profile подпиской не возвращается, поэтому локальную
+                    // копию обновляем сами: без этого следующая перерисовка
+                    // (её вызывает любое realtime-событие) вернула бы select
+                    // к прежнему значению. В participant ключ доедет копией
+                    // через триггер, и буззер заиграет новый джингл.
+                    user.sound_key = value || null;
+                })
                 .catch(function (err) {
-                    console.warn('Звук игроку не назначен:', err.message);
+                    console.warn('Звук не назначен:', err.message);
                 });
         });
         row.appendChild(select);
 
-        row.appendChild(this.button('▶', 'Прослушать джингл этого игрока', function () {
+        row.appendChild(this.button('▶', 'Прослушать этот джингл', function () {
             Quiz.audio.play(select.value);
         }));
         return row;
