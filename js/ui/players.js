@@ -138,10 +138,10 @@ Quiz.ui.players = {
         var box = document.createElement('div');
         box.className = 'player-actions';
 
-        box.appendChild(this.button('−1', 'Ответ неверный', function () {
+        box.appendChild(this.button('−1', 'Ответ кринжовый', function () {
             Quiz.game.score(participant.id, -1);
         }, 'is-minus'));
-        box.appendChild(this.button('0', 'Отвечал, но без баллов', function () {
+        box.appendChild(this.button('0', 'Ответ ни рыба, ни мясо', function () {
             Quiz.game.score(participant.id, 0);
         }));
         box.appendChild(this.button('+1', 'Ответ аргументированный', function () {
@@ -159,7 +159,7 @@ Quiz.ui.players = {
             }, 'is-plus'));
             // Подпись — значок: рядом стоят «+1» и «+2», и слово среди них
             // читалось как третья оценка. Что он делает, говорит title.
-            box.appendChild(this.button('⏱', 'Освободить буззер без оценки', function () {
+            box.appendChild(this.button('⏱', 'Сбросить ожидание (если игрок случайно нажал на кнопку)', function () {
                 Quiz.game.releaseBuzz();
             }));
         }
