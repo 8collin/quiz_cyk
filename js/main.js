@@ -72,6 +72,12 @@ Quiz.main = {
      * Одно и то же для входа по паролю и для восстановленной сессии, чтобы
      * два пути не разъехались.
      */
+    /** Сколько раз пробуем загрузить игру, прежде чем сдаться. */
+    LOAD_RETRIES: 4,
+
+    /** Базовая пауза между попытками, мс; растёт с номером попытки. */
+    LOAD_RETRY_MS: 1500,
+
     enterGame: async function (profile) {
         Quiz.dom.setRole(profile.role === 'admin' ? 'admin' : 'player');
         // Имя из профиля — только чтобы уголок не пустовал, пока грузится
@@ -81,15 +87,35 @@ Quiz.main = {
         Quiz.dom.setText('my-name', profile.display_name);
         Quiz.ui.login.hide();
 
-        try {
-            // Часы — раньше всего, что покажет время. Иначе первая отрисовка
-            // обратного отсчёта уйдёт по часам телефона, а они врут.
-            await Quiz.timing.syncClock();
-            await this.loadGame();
-        } catch (err) {
-            // Вход при этом состоялся, поэтому обратно на форму не выкидываем.
-            console.error('Не удалось загрузить игру:', err.message);
+        // Часы — раньше всего, что покажет время: иначе первая отрисовка
+        // обратного отсчёта уйдёт по часам телефона, а они врут. Промах по
+        // часам не повод не грузить игру — отсчёт лишь разъедется на
+        // смещение, а первый же буззер его пересинхронит (см. buzzer.js).
+        await Quiz.timing.syncClock().catch(function () {});
+
+        // Загрузка может не пройти с первого раза — устройство только вышло
+        // из сна, сеть ещё не поднялась. Молчать об этом, как раньше (один
+        // console.error), нельзя: экран остаётся пустым «ОЖИДАНИЕМ», и игрок
+        // не знает, что делать. Пробуем несколько раз с нарастающей паузой,
+        // а не вышло — показываем полосу потери связи с кнопкой «Обновить».
+        for (var attempt = 1; ; attempt++) {
+            try {
+                await this.loadGame();
+                return;
+            } catch (err) {
+                console.warn('Загрузка игры не удалась, попытка ' + attempt +
+                             ':', err.message);
+                if (attempt >= this.LOAD_RETRIES) {
+                    Quiz.ui.conn.setConnected(false);
+                    return;
+                }
+                await this.delay(this.LOAD_RETRY_MS * attempt);
+            }
         }
+    },
+
+    delay: function (ms) {
+        return new Promise(function (resolve) { setTimeout(resolve, ms); });
     },
 
     /**
