@@ -39,18 +39,18 @@
             <header class="top-bar">
                 <div class="admin-controls admin-only">
                     <select class="select-game" id="select-game" title="Активная игра"></select>
-                    <button class="btn" id="btn-new-game" title="Создать игру">+ Игра</button>
+                    <button class="btn" id="btn-new-game" title="Создать новую игру">+ Игра</button>
                     <button class="btn is-danger" id="btn-delete-game" title="Удалить текущую игру">− Игра</button>
                     <input type="file" id="input-xlsx" accept=".xlsx,.xls" hidden>
-                    <label for="input-xlsx" class="btn">Загрузить</label>
+                    <label for="input-xlsx" class="btn" title="Загрузить Excel файл с вопросами">Загрузить</label>
                     <!-- Подпись не меняется: что таблица сейчас на экране,
                          видно по самой кнопке — она подсвечена классом
                          is-on. Две формулировки в одной кнопке заставляли
                          строку прыгать на каждое нажатие. -->
                     <button class="btn" id="btn-toggle-stats" title="Показать таблицу статистики всем">Статистика</button>
-                    <button class="btn" id="btn-reset-penalties" title="Обнулить ожидание у всех">Сброс ⏱</button>
-                    <button class="btn" id="btn-restart">Сброс игры</button>
-                    <button class="btn btn-circle" id="btn-intro" title="Проиграть интро">🎵</button>
+                    <button class="btn" id="btn-reset-penalties" title="Сбросить ожидание у всех">Сброс ⏱</button>
+                    <button class="btn" id="btn-restart" title="Сбросить вопросы и счёт">Сброс игры</button>
+                    <button class="btn btn-circle" id="btn-intro" title="Воспроизвести интро у всех">🎵</button>
                 </div>
 
                 <div class="header-actions">
@@ -61,7 +61,7 @@
                     <!-- Под кем вошли. Только у игрока: у ведущего экран и
                          так его собственный, а шапка и без того плотная. -->
                     <div class="my-name player-only" id="my-name"></div>
-                    <button class="btn" id="btn-logout">Выйти</button>
+                    <button class="btn" id="btn-logout" title="Выйти из аккаунта">Выйти</button>
                 </div>
 
                 <!-- Вторая строка шапки: переход по вопросам и номер
@@ -97,7 +97,7 @@
                     <div class="sounds-head">
                         <div class="stats-title">Звуки</div>
                         <input type="file" id="input-sound" accept="audio/*" hidden>
-                        <label for="input-sound" class="btn">Залить звук</label>
+                        <label for="input-sound" class="btn" title="Загрузить новый звук">+ Звук</label>
                     </div>
                     <div class="sounds-scroll">
                         <div class="sounds-group">Файлы</div>
@@ -117,7 +117,7 @@
                     <div class="sounds-head">
                         <div class="stats-title">Пользователи</div>
                         <button class="btn" id="btn-add-account"
-                                title="Завести игроку вход: имя и пароль">+ Аккаунт</button>
+                                title="Создать аккаунт для нового игрока: имя и пароль">+ Аккаунт</button>
                     </div>
                     <div class="sounds-scroll">
                         <div id="users-list"></div>
