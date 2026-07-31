@@ -94,6 +94,17 @@ decision, not a refactor in passing.
 the rest get `23505`. Never try to pick a winner on the client — clock
 skew and latency make that unwinnable.
 
+**A +2 closes the question for everyone.** When the host accepts an answer
+(grade +2, i.e. an `answer_log` row with `delta = 2`) no one may buzz on
+that question — including the player who was right — until the host moves
+to a question that carries no +2. "Answered" is thus a property of the
+question, not a game flag: moving to a fresh question lifts the lock,
+returning to an answered one keeps it. Enforced in `buzz_guard` beside the
+cooldown check (`P0001 question_answered`), because a player with a console
+would otherwise INSERT a buzz past the greyed-out button; the client mirrors
+it with the `ANSWERED` buzzer state, checked before the buzz slot. See
+`sql/008_lock_answered_question.sql`.
+
 **Cooldowns advance along the T axis, not the wall clock.** T moves only
 while nobody is answering and freezes while someone holds the buzzer, so a
 penalty cannot expire during a long answer. The formula lives in

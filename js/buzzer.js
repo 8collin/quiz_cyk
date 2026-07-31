@@ -19,6 +19,7 @@ Quiz.buzzer = {
     MINE:  'mine',
     TAKEN: 'taken',
     WAIT:  'wait',
+    ANSWERED: 'answered', // по текущему вопросу засчитан «+2» — закрыт для всех
 
     /**
      * Нажатие ушло, ответа ещё нет.
@@ -52,6 +53,18 @@ Quiz.buzzer = {
     state: function () {
         var mine = Quiz.store.myParticipant();
         if (!Quiz.store.game || !mine) return this.IDLE;
+
+        // Ответ на текущий вопрос уже засчитан («+2») — буззер закрыт для
+        // всех, включая ответившего, пока ведущий не перейдёт на другой, ещё
+        // не отвеченный вопрос. Проверяем РАНЬШЕ буззера: «+2» освобождает
+        // слот, но между приходом строки answer_log и снятием buzz строка
+        // buzz ещё может быть на месте, и без этой очерёдности ответивший на
+        // миг увидел бы «ОТВЕЧАЙТЕ» вместо «ОТВЕЧЕНО». Предохранитель pending
+        // здесь тоже снимаем — жать всё равно больше нельзя.
+        if (Quiz.store.currentQuestionAnswered()) {
+            this.pending = false;
+            return this.ANSWERED;
+        }
 
         var buzz = Quiz.store.buzz;
         if (buzz) {
@@ -110,15 +123,21 @@ Quiz.buzzer = {
         }
 
         if (err.code === 'P0001') {
-            // База сказала, что кулдаун ещё идёт, а мы считали иначе.
-            // Спорить нечем: авторитет у неё. Повтор запроса ничего не
-            // изменит, поэтому пересобираем то, из чего мы считали, —
-            // смещение часов, ось игры и свой личный дедлайн.
-            console.warn('Буззер: кулдаун ещё идёт —', err.message);
+            // База отказала: либо кулдаун ещё идёт, либо по вопросу уже
+            // засчитан «+2». И то и другое — расхождение с нашим кешем;
+            // спорить нечем, авторитет у базы, повтор запроса ничего не
+            // изменит. Пересобираем то, из чего считалась кнопка: смещение
+            // часов, ось игры, свой личный дедлайн и журнал текущего вопроса
+            // (по нему видно засчитанный ответ).
+            console.warn('Буззер: база отказала —', err.message);
             await Quiz.timing.syncClock();
             Quiz.store.game = await Quiz.db.getGame(gameId);
             Quiz.timing.applyGameRow(Quiz.store.game);
             Quiz.store.participants = await Quiz.db.getParticipants(gameId);
+            if (Quiz.store.game && Quiz.store.game.current_question_id) {
+                Quiz.store.answerLog =
+                    await Quiz.db.getAnswerLog(Quiz.store.game.current_question_id);
+            }
             return;
         }
 

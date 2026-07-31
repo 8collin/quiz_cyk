@@ -91,6 +91,25 @@ Quiz.store = {
         }).length;
     },
 
+    /** Балл, которым ответ засчитывается и вопрос закрывается («+2»). */
+    ANSWERED_DELTA: 2,
+
+    /**
+     * Засчитан ли ответ на текущий вопрос — стоит ли по нему «+2».
+     *
+     * После этого буззер закрыт для всех, включая ответившего, пока ведущий
+     * не перейдёт на неотвеченный вопрос (см. Quiz.buzzer.state и buzz_guard
+     * в sql/008). answerLog всегда о текущем вопросе — его целиком
+     * перечитывает reloadQuestionScoped при каждой смене, — поэтому по смене
+     * вопроса замок снимается или остаётся сам собой.
+     */
+    currentQuestionAnswered: function () {
+        var accepted = this.ANSWERED_DELTA;
+        return this.answerLog.some(function (a) {
+            return a.delta === accepted;
+        });
+    },
+
     /** Звук по ключу. null, когда такого нет — звать будут `default`. */
     soundFor: function (key) {
         if (!key) return null;
