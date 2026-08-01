@@ -35,6 +35,15 @@ Quiz.realtime = {
     reconnectTimer: null,
     reconnectDelay: 0,
 
+    /** Таймер «связь продержалась достаточно, чтобы считать её настоящей». */
+    stableTimer: null,
+
+    /**
+     * Уже сообщили в консоль об обрыве — чтобы не повторять это на каждом
+     * тике мелькающего переподключения. Снимается, когда связь устоялась.
+     */
+    announcedDown: false,
+
     /** Ставится из main.js: чем перерисовывать после каждого изменения. */
     onChange: function () {},
 
@@ -75,6 +84,7 @@ Quiz.realtime = {
         this.wantConnection = true;
         this.pendingRecovery = false;
         this.reconnectDelay = 0;
+        this.announcedDown = false;
         return this._join();
     },
 
@@ -89,6 +99,15 @@ Quiz.realtime = {
 
     /** Потолок паузы между попытками переподключения. */
     RECONNECT_MAX_MS: 15000,
+
+    /**
+     * Сколько канал должен продержаться, прежде чем считать связь
+     * устойчивой: только тогда гасится бэкофф и печатается «восстановлено».
+     * Без этого мелькающее «встал-упал» (сеть перестраивается после смены
+     * VPN или маршрута) сбрасывало бы задержку в ноль на каждом подъёме и
+     * долбило бы переподключением раз в секунду.
+     */
+    STABLE_MS: 4000,
 
     /**
      * Заводит канал на текущую игру и вешает обработчики. Вынесено из
@@ -149,7 +168,6 @@ Quiz.realtime = {
                 // this.channel давно другой.
                 if (self.channel !== channel) return;
 
-                console.log('realtime:', status);
                 self._handleStatus(status);
 
                 if (!settled) {
@@ -176,8 +194,14 @@ Quiz.realtime = {
 
         if (status === 'SUBSCRIBED') {
             this.connected = true;
-            this.reconnectDelay = 0;
             this.onStatus(true);
+
+            // Бэкофф здесь НЕ гасим: канал, который встаёт и тут же падает,
+            // иначе сбрасывал бы задержку в ноль на каждом подъёме — отсюда
+            // ровный «SUBSCRIBED/CLOSED» раз в секунду. Сброс задержки и
+            // отметку «восстановлено» отдаём таймеру устойчивости.
+            this._armStableTimer();
+
             if (this.pendingRecovery) {
                 this.pendingRecovery = false;
                 this.onRecovered();
@@ -186,9 +210,40 @@ Quiz.realtime = {
         }
 
         // CHANNEL_ERROR / TIMED_OUT / CLOSED — всё, что не подтверждение.
+        this._clearStableTimer();
+        if (this.connected && !this.announcedDown) {
+            console.log('realtime: соединение потеряно —', status);
+            this.announcedDown = true;
+        }
         this.connected = false;
         this.onStatus(false);
         this._scheduleReconnect();
+    },
+
+    /**
+     * Заводит таймер устойчивости. Продержалась связь STABLE_MS — гасим
+     * бэкофф и, если раньше жаловались на обрыв, печатаем «восстановлено».
+     * Мелькание «встал-упал» до таймера не доживает, поэтому в консоль и не
+     * попадает: одна строка на обрыв, одна на возврат.
+     */
+    _armStableTimer: function () {
+        var self = this;
+        this._clearStableTimer();
+        this.stableTimer = setTimeout(function () {
+            self.stableTimer = null;
+            self.reconnectDelay = 0;
+            if (self.announcedDown) {
+                console.log('realtime: соединение восстановлено');
+                self.announcedDown = false;
+            }
+        }, this.STABLE_MS);
+    },
+
+    _clearStableTimer: function () {
+        if (this.stableTimer) {
+            clearTimeout(this.stableTimer);
+            this.stableTimer = null;
+        }
     },
 
     /**
@@ -228,6 +283,8 @@ Quiz.realtime = {
     unsubscribe: function () {
         this.wantConnection = false;
         this.pendingRecovery = false;
+        this.announcedDown = false;
+        this._clearStableTimer();
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = null;
