@@ -39,7 +39,7 @@
 .role-admin .nav-end { margin-left: auto; }
 .role-admin .status { font-size: 1.2rem; font-weight: 700; color: var(--text-muted); }
 
-.role-admin .question-text { font-size: 2.2rem; margin-bottom: 25px; }
+.role-admin .question-text { --q-font: 2.2rem; margin-bottom: 25px; }
 .role-admin .media { max-height: 40vh; }
 
 /* Выбор активной игры.
@@ -295,7 +295,7 @@
    было: с сохранёнными переводами строки длинное слово вылезало бы за
    рамку панели. */
 .answer-text {
-    font-size: 1.8rem;
+    --a-font: 1.8rem;
     color: var(--accent-gold);
     margin-bottom: 20px;
     white-space: pre-wrap;

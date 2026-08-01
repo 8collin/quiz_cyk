@@ -100,6 +100,13 @@ body {
     padding: 40px 30px;
 }
 .question-text {
+    /* Итоговый размер = база под текущий экран × персональный множитель.
+       Базу (--q-font) задают роли и медиазапросы (admin.css, player.css),
+       множитель (--q-scale) — tokens.css и, поверх, инлайн на <body> из
+       js/textscale.js. Это ЕДИНСТВЕННОЕ правило, трогающее font-size
+       вопроса: остальные меняют только --q-font, поэтому медиазапрос не
+       спорит с этим calc за специфичность и не перебивает множитель. */
+    font-size: calc(var(--q-font, 1.6rem) * var(--q-scale));
     font-weight: 800;
     line-height: 1.4;
     overflow-wrap: break-word;
@@ -113,6 +120,13 @@ body {
        переносить по ширине экрана. */
     white-space: pre-wrap;
 }
+/* Ответ масштабируется тем же множителем, что и вопрос, — регулятор один
+   на оба. --a-font задают роли (admin.css, player.css); число здесь лишь
+   запас, если роль не выставлена. Как и у вопроса, font-size ответа
+   задаётся только тут. */
+.answer-text {
+    font-size: calc(var(--a-font, 1.5rem) * var(--q-scale));
+}
 /* Курсор — единственная подсказка, что картинку можно раскрыть во весь
    экран; на телефоне подсказки нет вовсе, там пробуют пальцем. */
 .media {
@@ -123,6 +137,46 @@ body {
     margin-bottom: 20px;
     cursor: zoom-in;
 }
+
+/* Регулятор размера текста — кнопки A− / A+ в углу области вопроса. Одна
+   разметка на обе роли; масштаб хранит устройство (js/textscale.js) и в
+   игру он не уходит.
+   Sticky, а не absolute: .question-area прокручивается (overflow-y:auto),
+   и в потоке кнопки уехали бы вверх вместе с длинным вопросом. order
+   выносит их выше ответа, который у игрока встаёт над вопросом
+   (.answer-preview order:-1). Сам регулятор множитель не масштабирует —
+   его font-size задан без var(--q-scale). */
+.text-scale {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    order: -2;
+    align-self: flex-end;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.text-scale-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    font-variant-numeric: tabular-nums;
+}
+.text-scale-btn:hover { background: var(--bg-raised); }
+.text-scale-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .players-scroll {
     flex-grow: 1;

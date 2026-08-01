@@ -21,6 +21,7 @@ Quiz.main = {
         }
 
         this.bindVolume();
+        this.bindTextScale();
         Quiz.ui.buzzer.bind();
         Quiz.ui.sounds.bind();
         // Сразу, на пустом store: получится «ОЖИДАНИЕ», заблокировано. Роль
@@ -273,6 +274,31 @@ Quiz.main = {
         slider.addEventListener('input', function () {
             Quiz.audio.setVolume(slider.value);
         });
+    },
+
+    /**
+     * Кнопки A− / A+ у области вопроса. Как и громкость, настройка живёт
+     * на устройстве и от состояния игры не зависит, поэтому вешаем один
+     * раз здесь, а не из отрисовки. На границах гасим соответствующую
+     * кнопку, чтобы нажатие впустую не читалось как поломка.
+     */
+    bindTextScale: function () {
+        Quiz.textScale.load();
+
+        var refresh = function () {
+            Quiz.dom.el('btn-text-smaller').disabled = Quiz.textScale.atMin();
+            Quiz.dom.el('btn-text-bigger').disabled = Quiz.textScale.atMax();
+        };
+
+        Quiz.dom.on('btn-text-smaller', 'click', function () {
+            Quiz.textScale.bump(-1);
+            refresh();
+        });
+        Quiz.dom.on('btn-text-bigger', 'click', function () {
+            Quiz.textScale.bump(1);
+            refresh();
+        });
+        refresh();
     }
 };
 

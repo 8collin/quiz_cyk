@@ -132,7 +132,7 @@
     border-radius: 12px;
 }
 .role-player .question-text {
-    font-size: 1.05rem;
+    --q-font: 1.05rem;
     font-weight: 700;
     line-height: 1.45;
     margin-bottom: 12px;
@@ -154,7 +154,7 @@
     padding: 14px;
 }
 .role-player .answer-preview-title { margin-bottom: 8px; font-size: 0.8rem; }
-.role-player .answer-text { font-size: 1.15rem; margin-bottom: 0; }
+.role-player .answer-text { --a-font: 1.15rem; margin-bottom: 0; }
 .role-player .answer-preview .media { margin: 10px 0 0; }
 
 .role-player .player-card {
@@ -352,7 +352,7 @@
         margin-top: 24px;
         padding: 28px 32px;
     }
-    .role-player .question-text { font-size: 1.6rem; line-height: 1.4; margin-bottom: 20px; }
+    .role-player .question-text { --q-font: 1.6rem; line-height: 1.4; margin-bottom: 20px; }
 
     /* На телефоне картинка растянута во всю ширину; здесь её надо, наоборот,
        удержать — иначе она съедает высоту, отведённую тексту. */
@@ -364,7 +364,7 @@
     }
 
     .role-player .answer-preview { margin-bottom: 20px; padding: 20px 24px; }
-    .role-player .answer-text { font-size: 1.5rem; }
+    .role-player .answer-text { --a-font: 1.5rem; }
 
     /* Телефонный предел ширины снят: здесь кнопку держит она сама. */
     .role-player .action-area {

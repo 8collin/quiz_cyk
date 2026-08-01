@@ -153,6 +153,16 @@
             </div>
 
             <section class="question-area" id="question-area">
+                <!-- Персональный размер текста вопроса и ответа. Одна
+                     разметка на обе роли; масштаб хранится на устройстве
+                     (js/textscale.js) и в игру не уходит. Положение — угол
+                     прокручиваемой области вопроса — задаёт CSS
+                     (.text-scale), одни кнопки правят и вопрос, и ответ:
+                     .answer-preview лежит в этой же секции. -->
+                <div class="text-scale" role="group" aria-label="Размер текста">
+                    <button class="text-scale-btn" id="btn-text-smaller" type="button" title="Мельче текст" aria-label="Мельче текст">A−</button>
+                    <button class="text-scale-btn" id="btn-text-bigger" type="button" title="Крупнее текст" aria-label="Крупнее текст">A+</button>
+                </div>
                 <div class="question-text" id="question-text"></div>
                 <img class="media" id="question-image" alt="" hidden>
 
@@ -214,6 +224,7 @@
     <script src="js/store.js"></script>
     <script src="js/timing.js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/textscale.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/excel.js"></script>
     <script src="js/game.js"></script>
