@@ -1,5 +1,9 @@
 /* Вид ведущего: десктоп, боковая панель плюс строка управления. */
 
+button#btn-toggle-sounds, button#btn-toggle-users {
+    visibility: hidden;
+}
+
 .role-admin .sidebar {
     width: 300px;
     min-width: 300px;
