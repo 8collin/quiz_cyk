@@ -108,6 +108,9 @@ body {
        спорит с этим calc за специфичность и не перебивает множитель. */
     font-size: calc(var(--q-font, 1.6rem) * var(--q-scale));
     font-weight: 800;
+    /* Вопрос показываем капсом. Это оформление, а не данные: в базе и в
+       textContent текст остаётся как есть, регистр наводит только CSS. */
+    text-transform: uppercase;
     line-height: 1.4;
     overflow-wrap: break-word;
     word-break: break-word;
@@ -126,6 +129,8 @@ body {
    задаётся только тут. */
 .answer-text {
     font-size: calc(var(--a-font, 1.5rem) * var(--q-scale));
+    /* Капсом, как и вопрос, — тем же приёмом (см. .question-text). */
+    text-transform: uppercase;
 }
 /* Курсор — единственная подсказка, что картинку можно раскрыть во весь
    экран; на телефоне подсказки нет вовсе, там пробуют пальцем. */
