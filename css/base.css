@@ -379,7 +379,7 @@ body {
 .gate-btn {
     width: 100%;
     max-width: 420px;
-    height: min(45vh, 300px);
+    height: min(45vh, 150px);
     border: none;
     border-radius: var(--radius-lg);
     color: white;
