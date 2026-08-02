@@ -195,6 +195,15 @@
         <img class="lightbox-image" id="lightbox-image" alt="">
     </div>
 
+    <!-- Шлюз автоплея. Снаружи #screen-game и без классов роли: показывать
+         ли его, решает не роль сама по себе, а «было ли касание» —
+         Quiz.ui.gate по Quiz.audio.unlocked. Пока он открыт, игры не видно:
+         это единственный способ гарантировать касание, без которого
+         браузер не даст зазвучать джинглу. -->
+    <div class="gate" id="gate" hidden>
+        <button class="gate-btn" id="btn-gate" type="button">ПРОДОЛЖИТЬ</button>
+    </div>
+
     <!-- Полоса «связь потеряна». Снаружи #screen-game и без классов роли:
          нужна обеим ролям и поверх всего. Спрятана по умолчанию; показывает
          её Quiz.ui.conn, когда realtime теряет канал (js/ui/conn.js). -->
@@ -242,6 +251,7 @@
          когда открывается, и обращается к ней по имени. -->
     <script src="js/ui/users.js"></script>
     <script src="js/ui/conn.js"></script>
+    <script src="js/ui/gate.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

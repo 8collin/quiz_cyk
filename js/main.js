@@ -20,6 +20,11 @@ Quiz.main = {
             return;
         }
 
+        // Раньше всего остального: слушатель первого касания должен стоять
+        // прежде, чем по странице вообще станет по чему нажимать. Касание —
+        // единственное, чем снимается запрет автоплея (js/audio.js).
+        Quiz.audio.armUnlock();
+
         this.bindVolume();
         this.bindTextScale();
         Quiz.ui.buzzer.bind();
@@ -35,6 +40,7 @@ Quiz.main = {
         Quiz.ui.admin.bind();
         Quiz.ui.lightbox.bind();
         Quiz.ui.conn.bind();
+        Quiz.ui.gate.bind();
         Quiz.dom.on('btn-logout', 'click', function () { Quiz.main.signOut(); });
         Quiz.ui.login.bind(function (profile) { Quiz.main.enterGame(profile); });
 
@@ -80,13 +86,20 @@ Quiz.main = {
     LOAD_RETRY_MS: 1500,
 
     enterGame: async function (profile) {
-        Quiz.dom.setRole(profile.role === 'admin' ? 'admin' : 'player');
+        var role = profile.role === 'admin' ? 'admin' : 'player';
+        Quiz.dom.setRole(role);
         // Имя из профиля — только чтобы уголок не пустовал, пока грузится
         // игра. Дальше его ведёт отрисовка списка: ведущий может
         // переименовать человека посреди раунда, и в углу должно оказаться
         // то же имя, что на табло.
         Quiz.dom.setText('my-name', profile.display_name);
         Quiz.ui.login.hide();
+
+        // Сессия могла восстановиться сама, и тогда игрок попадает в игру,
+        // ни разу ничего не нажав, — а без касания браузер не даст зазвучать
+        // джинглу. Шлюз добирает касание. Ждать его не надо: состояние
+        // грузится под ним, и к нажатию экран уже готов.
+        Quiz.ui.gate.maybeShow(role);
 
         // Часы — раньше всего, что покажет время: иначе первая отрисовка
         // обратного отсчёта уйдёт по часам телефона, а они врут. Промах по
@@ -252,6 +265,9 @@ Quiz.main = {
         // Полосе «переподключаюсь» на экране входа делать нечего: связь с
         // игрой мы разорвали сами.
         Quiz.ui.conn.hide();
+        // Шлюз экран входа и так перекрывает, но оставленный открытым он
+        // вынырнул бы поверх игры после следующего входа.
+        Quiz.ui.gate.hide();
         // Чужое имя не должно мелькнуть в шапке при следующем входе.
         Quiz.dom.setText('my-name', '');
         Quiz.ui.login.show();

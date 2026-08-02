@@ -354,6 +354,49 @@ body {
 /* Строка узкая — кнопка в ней меньше основной. */
 .conn-banner .btn { padding: 6px 14px; }
 
+/* --- Шлюз автоплея ----------------------------------------------------
+   Экран «ПРОДОЛЖИТЬ»: пока по нему не нажали, игры не видно (js/ui/gate.js).
+   Фон непрозрачный — под ним состояние уже грузится, и мелькание пустой
+   игры было бы единственным, что игрок успел бы увидеть.
+
+   Выше полосы связи (95) и ниже экрана входа (100): истёкшая сессия
+   обязана перекрывать и шлюз — жать «ПРОДОЛЖИТЬ» там, где нужен пароль,
+   некуда. */
+.gate {
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    background: var(--bg-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+/* Крупная намеренно: в неё попадают, не глядя и на бегу — игрок, у
+   которого телефон перезагрузил вкладку, догоняет уже идущий раунд.
+   Синяя, а не красная: с буззером её путать нельзя. */
+.gate-btn {
+    width: 100%;
+    max-width: 420px;
+    height: min(45vh, 300px);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: white;
+    font-family: inherit;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--accent-blue), #0284c7);
+    box-shadow: 0 6px 0 #075985, 0 8px 18px rgba(0, 0, 0, 0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.gate-btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #075985, 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
 /* --- Статистика ------------------------------------------------------
    Здесь только сама таблица — она одна на обе роли. Где она появляется,
    решают ролевые файлы: ведущему вместо вопроса (admin.css), игроку

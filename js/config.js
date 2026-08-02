@@ -34,5 +34,30 @@ Quiz.config = {
 
     /** Как часто перерисовывается обратный отсчёт на буззере, мс.
      *  Считается локально, без единого запроса в базу. */
-    COUNTDOWN_TICK_MS: 200
+    COUNTDOWN_TICK_MS: 200,
+
+    /**
+     * Кому показывать шлюз «ПРОДОЛЖИТЬ» — экран, снимающий запрет автоплея
+     * (js/ui/gate.js).
+     *
+     * Ведущему выключено намеренно: он и так жмёт по панели постоянно, а
+     * лишний экран посреди его работы дороже пропущенного интро. Логика
+     * для него написана целиком — если окажется, что после F5 у ведущего
+     * тоже пропадает звук, здесь достаточно поставить true.
+     */
+    GATE_FOR_PLAYER: true,
+    GATE_FOR_ADMIN: false,
+
+    /**
+     * 10 мс тишины, 8 кГц, моно — WAV целиком, 124 байта.
+     *
+     * Файлом рядом со страницей быть не может: её открывают и с диска, и с
+     * Pages, а к моменту разблокировки Storage может ещё не ответить.
+     * Содержимое роли не играет — важно, что play() на нём вызван внутри
+     * обработчика касания (см. Quiz.audio.unlock).
+     */
+    SILENCE_WAV: 'data:audio/wav;base64,' +
+        'UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAA' +
+        'AACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA' +
+        'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=='
 };

@@ -164,6 +164,23 @@ generated per upload (`Quiz.ui.sounds.freshPath`), never derived from the
 key. That also dodges the public bucket's `max-age=3600`, which would
 otherwise keep serving a replaced file for an hour.
 
+**Sound is unlocked by a touch, and only by one.** A browser will not let
+a page make noise until someone has touched it, and every jingle here
+arrives over realtime — nobody on that phone asked for it. So
+`Quiz.audio.unlock()` must be called **synchronously inside a gesture
+handler**; an `await` before it throws the permission away. It is called
+from a one-shot capture listener on `pointerdown`/`keydown`
+(`Quiz.audio.armUnlock`, armed first thing in `main.start`), and again by
+the «ПРОДОЛЖИТЬ» gate that a player without a touch gets instead of the
+game (`js/ui/gate.js`).
+
+Unlock also builds a pool of four `<audio>` elements, and `play()` takes
+one from it instead of building a fresh `new Audio(url)`. That is for
+Safari: it lifts the ban on the *element* that played inside the gesture,
+not on the document, and keeps it lifted across `src` changes. Without the
+pool the gate would fix Android and leave iPhones mute. See
+`docs/decisions.md`, этап 14.
+
 **Supabase runs with `pg_safeupdate`**: `UPDATE` and `DELETE` without a
 `WHERE` clause are rejected at runtime. Always include one.
 
