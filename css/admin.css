@@ -5,8 +5,8 @@
 }*/
 
 .role-admin .sidebar {
-    width: 350px;
-    min-width: 350px;
+    width: 320px;
+    min-width: 320px;
     background-color: var(--bg-panel);
     border-right: var(--border-subtle);
     display: flex;
