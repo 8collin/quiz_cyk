@@ -111,7 +111,7 @@ Quiz.ui.players = {
         var badge = document.createElement('span');
         badge.className = 'badge badge-tries';
         var count = Quiz.store.answerCountFor(participant.id);
-        badge.textContent = count ? 'Ответов: ' + count : '';
+        badge.textContent = count ? '✱' + count : '';
         badge.title = 'Количество ответов';
         badge.hidden = !count;
         return badge;
