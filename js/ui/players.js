@@ -112,7 +112,7 @@ Quiz.ui.players = {
         badge.className = 'badge badge-tries';
         var count = Quiz.store.answerCountFor(participant.id);
         badge.textContent = count ? '✱' + count : '';
-        badge.title = 'Количество ответов';
+        badge.title = 'Количество ответов на текущий вопрос';
         badge.hidden = !count;
         return badge;
     },
