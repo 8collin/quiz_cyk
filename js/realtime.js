@@ -7,6 +7,14 @@
  * «отвечает» и бейджи с песочными часами залипают. Перечитывайте
  * затронутые таблицы явно — этим занимается reloadQuestionScoped().
  *
+ * Второй урок, оплаченный уже этой версией: обработчик не имеет права
+ * умереть по дороге к onChange(). Перечитка ходит в сеть шесть раз подряд,
+ * и на телефоне любой из них может не дойти; исключение, вылетевшее из
+ * async-обработчика, отменяло отрисовку целиком — экран оставался на
+ * прошлом вопросе, хотя store.game описывал уже новый. Поэтому всякая
+ * перечитка внутри обработчика идёт через reloadSafely, а onChange()
+ * зовётся в любом случае.
+ *
  * События DELETE приходят с полной старой строкой только потому, что у
  * `buzz` и `participant` выставлен replica identity full (см. 001_schema).
  * С настройкой по умолчанию в payload лежал бы один первичный ключ, и
@@ -85,6 +93,7 @@ Quiz.realtime = {
         this.pendingRecovery = false;
         this.reconnectDelay = 0;
         this.announcedDown = false;
+        this._startWatchdog();
         return this._join();
     },
 
@@ -307,6 +316,11 @@ Quiz.realtime = {
         this.wantConnection = false;
         this.pendingRecovery = false;
         this.announcedDown = false;
+        // Гасит отложенные повторы перечитки: игру мы покидаем, и класть
+        // их результат будет уже некуда. subscribe() зовёт unsubscribe()
+        // первой строкой, так что переезд на другую игру покрыт тоже.
+        this.reloadGeneration++;
+        this._stopWatchdog();
         this._clearStableTimer();
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
@@ -320,6 +334,91 @@ Quiz.realtime = {
     sendIntro: function () {
         if (!this.channel) return;
         this.channel.send({ type: 'broadcast', event: 'intro', payload: {} });
+    },
+
+    // --- Сторож: событие, которое не доехало ------------------------------
+    //
+    // Realtime ничего не обещает. Событие может не дойти, и канал при этом
+    // останется `joined`, сокет — открытым, а `connected` — true: полоса
+    // «переподключаюсь» не покажется, переподключения не будет, перечитки
+    // тоже. Экран так и останется на прошлом вопросе до перезагрузки
+    // страницы — ровно это и увидел игрок (docs/decisions.md, этап 16).
+    // Проверено на живой паре вкладок: оба клиента разом не получили UPDATE
+    // строки game, хотя в базе он был, а канал у обоих числился живым.
+    //
+    // Поэтому строку game сверяем сами. Это НЕ тот опрос базы, которого в
+    // проекте быть не должно: отсчёт по-прежнему рисуется из кеша пять раз
+    // в секунду, а здесь один крохотный GET раз в WATCHDOG_MS и только
+    // пока вкладка на виду.
+
+    /** Как часто сверяем строку game, даже когда канал жив. */
+    WATCHDOG_MS: 10000,
+
+    watchdogTimer: null,
+
+    _startWatchdog: function () {
+        var self = this;
+        this._stopWatchdog();
+        this.watchdogTimer = setInterval(function () { self.syncGame(); },
+                                         this.WATCHDOG_MS);
+    },
+
+    _stopWatchdog: function () {
+        if (this.watchdogTimer) {
+            clearInterval(this.watchdogTimer);
+            this.watchdogTimer = null;
+        }
+    },
+
+    /**
+     * Сверяет строку game с тем, что лежит в store, и, если разошлись,
+     * проводит разницу тем же обработчиком, что и настоящее событие, —
+     * чтобы догоняющий путь не разъехался с основным.
+     *
+     * Зовётся сторожем по таймеру и из main.js, когда вкладка возвращается
+     * на экран: пока телефон был погашен, таймеры стояли, а ведущий нет.
+     */
+    syncGame: async function () {
+        if (!this.gameId || !this.wantConnection) return;
+        // Вкладка не на виду — сверяться незачем: покажем её всё равно не
+        // раньше, чем на неё посмотрят, а к тому моменту сверка уже будет.
+        if (document.hidden) return;
+        // Идёт полная загрузка (переезд на другую игру) — не мешаем.
+        if (!Quiz.store.game || Quiz.store.game.id !== this.gameId) return;
+
+        var row;
+        try {
+            row = await Quiz.db.getGame(this.gameId);
+        } catch (err) {
+            // Сеть моргнула — следующая сверка попробует снова.
+            return;
+        }
+
+        // Игру удалили, а DELETE до нас не доходит: у канала подписан
+        // только UPDATE (см. game.deleteGame).
+        if (!row) {
+            this.onGameClosed();
+            return;
+        }
+
+        if (!this._differs(row)) return;
+
+        if (row.current_question_id !==
+            (Quiz.store.game || {}).current_question_id) {
+            console.warn('Событие game не дошло — догоняем сверкой.');
+        }
+        await this.handleGame({ new: row });
+    },
+
+    /** Поля, по которым видно, что событие прошло мимо нас. */
+    WATCHED_FIELDS: ['status', 'current_question_id', 'show_answer',
+                     'show_stats', 'think_base_ms', 'think_since'],
+
+    _differs: function (row) {
+        var mine = Quiz.store.game || {};
+        return this.WATCHED_FIELDS.some(function (field) {
+            return mine[field] !== row[field];
+        });
     },
 
     // --- Обработчики -----------------------------------------------------
@@ -347,9 +446,26 @@ Quiz.realtime = {
             // Вот та самая явная перечитка. Подписки на buzz и participant
             // придут своим темпом, а до тех пор состояние в памяти описывает
             // предыдущий вопрос.
-            await this.reloadQuestionScoped();
+            //
+            // Через reloadSafely, а не напрямую: голый await здесь уносил
+            // исключение мимо onChange() и оставлял игрока на прошлом
+            // вопросе до перезагрузки страницы (см. заголовок файла).
+            if (!(await this.reloadSafely(this.reloadQuestionScoped))) {
+                // Не прошла — значит, в store лежит состояние ПРОШЛОГО
+                // вопроса, и оно теперь неверно: засчитанный там «+2»
+                // держал бы буззер закрытым на новом вопросе, а строка
+                // buzz — подсветку «отвечает». Пусто лучше, чем неверно:
+                // жать буззер база всё равно рассудит сама, а повтор
+                // перечитки вернёт настоящее состояние.
+                this.dropQuestionScoped();
+            }
         } else if (revealChanged) {
-            await this.reloadRevealedAnswer();
+            if (!(await this.reloadSafely(this.reloadRevealedAnswer))) {
+                // Та же логика в мелком масштабе: не смогли узнать, открыт
+                // ли ответ, — прячем. Показать чужой ответ хуже, чем не
+                // показать свой.
+                Quiz.store.revealedAnswer = null;
+            }
         }
 
         this.onChange();
@@ -424,6 +540,91 @@ Quiz.realtime = {
     },
 
     // --- Перечитки -------------------------------------------------------
+
+    /** Сколько раз повторяем перечитку, которая не прошла. */
+    RELOAD_RETRIES: 4,
+
+    /** Базовая пауза между повторами, мс; растёт с номером попытки. */
+    RELOAD_RETRY_MS: 800,
+
+    /**
+     * Номер поколения перечиток. Растёт на каждой новой и на смене
+     * подписки, чем и гасит повторы, затеянные предыдущей: пока повтор
+     * ждал свою паузу, ведущий мог уйти ещё на вопрос вперёд, и дочитывать
+     * позапрошлый уже незачем — его результат затёр бы свежий.
+     */
+    reloadGeneration: 0,
+
+    /**
+     * Перечитка, которая переживает неудачу. Возвращает true, если прошла
+     * с первого раза, и false, если нет; неудачную повторяет в фоне.
+     *
+     * Ради этого «false» всё и написано. Раньше обработчик ждал перечитку
+     * голым await, и одна не прошедшая выборка — моргнула сеть на телефоне,
+     * а их там шесть подряд — уносила исключение наружу, мимо onChange().
+     * Экран не перерисовывался вовсе, хотя store.game уже описывал новый
+     * вопрос. Следующее событие (сброс оси перед СЛЕДУЮЩИМ вопросом)
+     * рисовало наконец этот, и игрок ехал ровно на вопрос позади ведущего
+     * до перезагрузки страницы (docs/decisions.md, этап 16).
+     *
+     * Отсюда два правила, которые здесь и закреплены: обработчик realtime
+     * не имеет права умереть по дороге к отрисовке, а перечитка не имеет
+     * права провалиться молча и навсегда.
+     */
+    reloadSafely: async function (reload) {
+        var generation = ++this.reloadGeneration;
+        try {
+            await reload.call(this);
+            return true;
+        } catch (err) {
+            console.warn('Перечитка не прошла:', err.message);
+            this._scheduleReloadRetry(reload, generation, 1);
+            return false;
+        }
+    },
+
+    /**
+     * Повтор с нарастающей паузой. Удался — зовём onChange(): экран
+     * дорисует то, чего в момент неудачи не было (счёт, штрафы,
+     * засчитанный ответ). Не удался и попытки кончились — оставляем как
+     * есть: вопрос на экране правильный, а остальное поправит первое же
+     * событие или переподключение.
+     */
+    _scheduleReloadRetry: function (reload, generation, attempt) {
+        var self = this;
+        if (attempt > this.RELOAD_RETRIES) {
+            console.warn('Перечитка не удалась ' + this.RELOAD_RETRIES +
+                         ' раз подряд — состояние может отставать.');
+            return;
+        }
+
+        setTimeout(function () {
+            // Поколение сменилось — эту перечитку уже некуда класть.
+            if (self.reloadGeneration !== generation) return;
+
+            reload.call(self).then(function () {
+                if (self.reloadGeneration !== generation) return;
+                self.onChange();
+            }, function (err) {
+                if (self.reloadGeneration !== generation) return;
+                console.warn('Повтор перечитки (' + attempt + ') не прошёл:',
+                             err.message);
+                self._scheduleReloadRetry(reload, generation, attempt + 1);
+            });
+        }, this.RELOAD_RETRY_MS * attempt);
+    },
+
+    /**
+     * Снимает всё, что относилось к прошлому вопросу, не трогая список
+     * вопросов и участников: те вопрос переживают, а эти три — нет.
+     * Зовётся, только когда перечитка не прошла, — на удачном пути
+     * состояние меняется целиком и разом, как и раньше.
+     */
+    dropQuestionScoped: function () {
+        Quiz.store.buzz = null;
+        Quiz.store.answerLog = [];
+        Quiz.store.revealedAnswer = null;
+    },
 
     /** Всё, что привязано к конкретному вопросу и не переживает его смены. */
     reloadQuestionScoped: async function () {

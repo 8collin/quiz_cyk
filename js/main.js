@@ -57,6 +57,13 @@ Quiz.main = {
             Quiz.ui.conn.setConnected(connected);
         };
 
+        // Телефон разбудили или вкладку вернули на экран. Пока экран был
+        // погашен, таймеры стояли, а ведущий — нет: сверяемся сразу, не
+        // дожидаясь очередного срабатывания сторожа.
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) Quiz.realtime.syncGame();
+        });
+
         // Токен может истечь или сессию закроют из другой вкладки.
         Quiz.auth.onSignedOut(function () { Quiz.main.showLogin(); });
 
@@ -224,21 +231,37 @@ Quiz.main = {
      * зовём вместо точечной перечитки.
      */
     refreshState: async function () {
-        try {
-            var game = await Quiz.db.getActiveGame();
-            if (!game || game.status !== 'running' ||
-                !Quiz.store.game || game.id !== Quiz.store.game.id) {
-                await this.loadGame();
+        // Повторяем так же и тем же, чем enterGame, и по той же причине:
+        // связь только что поднялась после обрыва, то есть это ровно тот
+        // момент, когда запрос скорее всего не дойдёт. Одного console.warn
+        // здесь мало — второго события, которое исправило бы положение, не
+        // будет: канал-то живой, переподключаться больше нечему, и store
+        // остался бы отставшим до перезагрузки страницы.
+        for (var attempt = 1; ; attempt++) {
+            try {
+                await this.refreshStateOnce();
                 return;
+            } catch (err) {
+                console.warn('Не удалось освежить состояние после ' +
+                             'переподключения, попытка ' + attempt + ':',
+                             err.message);
+                if (attempt >= this.LOAD_RETRIES) return;
+                await this.delay(this.LOAD_RETRY_MS * attempt);
             }
-            Quiz.store.game = game;
-            Quiz.timing.applyGameRow(game);
-            await Quiz.realtime.reloadQuestionScoped();
-            this.render();
-        } catch (err) {
-            console.warn('Не удалось освежить состояние после переподключения:',
-                         err.message);
         }
+    },
+
+    refreshStateOnce: async function () {
+        var game = await Quiz.db.getActiveGame();
+        if (!game || game.status !== 'running' ||
+            !Quiz.store.game || game.id !== Quiz.store.game.id) {
+            await this.loadGame();
+            return;
+        }
+        Quiz.store.game = game;
+        Quiz.timing.applyGameRow(game);
+        await Quiz.realtime.reloadQuestionScoped();
+        this.render();
     },
 
     render: function () {

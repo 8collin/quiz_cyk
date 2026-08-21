@@ -119,6 +119,26 @@ everywhere.
 times a second off cached state; realtime corrects that state. Ten phones
 polling would be thousands of pointless requests per round.
 
+**Realtime guarantees no delivery, so the `game` row is reconciled.** An
+event can simply go missing while the channel still reports `joined`, the
+socket `open` and `connected` true — observed on two clients at once, with
+the row already changed in the database. Nothing notices and nothing
+retries, so the screen keeps the previous question until someone reloads
+the page. Hence `Quiz.realtime.syncGame`: one small GET of the `game` row
+every ten seconds and one whenever the tab comes back into view, and any
+difference is replayed through `handleGame` — the same handler a real event
+goes through, so the catch-up path cannot drift from the normal one. This
+does not contradict the rule above: that one is about the countdown tick,
+which repaints five times a second and must stay on cached state.
+
+**A realtime handler must reach `onChange()`.** `handleGame` is the only
+async one, and an exception on the way — one of the six requests in
+`reloadQuestionScoped` not arriving on a phone — used to escape the async
+callback and cancel the repaint entirely, while `store.game` already held
+the new row. Every reread inside a handler therefore goes through
+`reloadSafely`, which catches, retries in the background and reports
+failure as a return value. See `docs/decisions.md`, этап 16.
+
 **The anon key is public and grants nothing.** It ships inside the page.
 Access control lives entirely in the RLS policies in `sql/003_rls.sql`.
 Never add the `service_role` key to this repository, and never move a rule
