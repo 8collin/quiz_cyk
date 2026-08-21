@@ -131,6 +131,22 @@ goes through, so the catch-up path cannot drift from the normal one. This
 does not contradict the rule above: that one is about the countdown tick,
 which repaints five times a second and must stay on cached state.
 
+**A screen with no game needs a way back too.** While no game is running
+there is no subscription either — the channel is keyed by the game id — so
+nothing can tell the client that the host has since started one, and the
+player sat on «Игра не найдена» until F5. `Quiz.main.tryRecover` is the
+same remedy at a smaller scale: one small `getActiveGame()` every
+`RECOVERY_POLL_MS`, and only while the client is actually stuck — no
+running game, or a load that failed all `LOAD_RETRIES` attempts. It is
+armed in exactly those two places, cancels itself the moment a game is
+found, and is cancelled by `showLogin()` so it cannot outlive the session.
+The cheap query comes first on purpose: a bare `loadGame()` on every tick
+would drop the subscription, reset the store and re-read the sounds for
+nothing. For the same class of reason `Quiz.realtime.onChange` is assigned
+in `main.start()` beside the other three handlers — inside `loadGameOnce`
+it sat below an early return and stayed the no-op default. See
+`docs/decisions.md`, этап 17.
+
 **A realtime handler must reach `onChange()`.** `handleGame` is the only
 async one, and an exception on the way — one of the six requests in
 `reloadQuestionScoped` not arriving on a phone — used to escape the async
